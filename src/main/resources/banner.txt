@@ -1,0 +1,4 @@
+   _____                                        _____                   _   _
+ jsc
+${application.title} ${application.version}
+Powered by Spring Boot ${spring-boot.version}

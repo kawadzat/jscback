@@ -1,0 +1,167 @@
+{
+  "info": {
+    "name": "Laptop-Maintenance Relationship Test",
+    "description": "Test collection to verify the laptop-maintenance relationship is working correctly",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "laptopId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "maintenanceId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create Laptop (if needed)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"purchaseDate\": \"2024-01-01\",\n  \"manufacturer\": \"Dell\",\n  \"serialNumber\": \"DELL123456\",\n  \"model\": \"Latitude 5520\",\n  \"ram\": 16,\n  \"processor\": 8,\n  \"issueDate\": \"2024-01-15\",\n  \"status\": \"AVAILABLE\",\n  \"issuedTo\": \"John Doe\",\n  \"department\": \"IT\",\n  \"designation\": \"Developer\",\n  \"email\": \"john.doe@company.com\",\n  \"replacementDate\": \"2027-01-01\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/laptop/create",
+          "host": ["{{baseUrl}}"],
+          "path": ["laptop", "create"]
+        },
+        "description": "Create a laptop using the itinventory controller. This will be used for testing the maintenance relationship."
+      }
+    },
+    {
+      "name": "2. Get All Laptops",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/laptop/getAll",
+          "host": ["{{baseUrl}}"],
+          "path": ["laptop", "getAll"]
+        },
+        "description": "Get all laptops to verify the laptop was created and get its ID."
+      }
+    },
+    {
+      "name": "3. Add Maintenance to Laptop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"maintenanceType\": \"PREVENTIVE\",\n  \"description\": \"Regular system maintenance and cleaning\",\n  \"scheduledDate\": \"2024-02-01T10:00:00\",\n  \"priority\": \"MEDIUM\",\n  \"notes\": \"Scheduled preventive maintenance\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/maintenance/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "maintenance", "laptop", "{{laptopId}}"]
+        },
+        "description": "Add maintenance record to the specified laptop. This tests the relationship."
+      }
+    },
+    {
+      "name": "4. Get Maintenance by Laptop",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/maintenance/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "maintenance", "laptop", "{{laptopId}}"]
+        },
+        "description": "Get all maintenance records for the specified laptop to verify the relationship."
+      }
+    },
+    {
+      "name": "5. Schedule Maintenance",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"maintenanceType\": \"CORRECTIVE\",\n  \"description\": \"Fix keyboard issues\",\n  \"scheduledDate\": \"2024-02-15T14:00:00\",\n  \"priority\": \"HIGH\",\n  \"notes\": \"Keyboard not responding properly\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/maintenance/schedule/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "maintenance", "schedule", "{{laptopId}}"]
+        },
+        "description": "Schedule maintenance for the laptop using the business logic method."
+      }
+    },
+    {
+      "name": "6. Start Maintenance",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/maintenance/{{maintenanceId}}/start",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "maintenance", "{{maintenanceId}}", "start"]
+        },
+        "description": "Start the maintenance process by changing status to IN_PROGRESS."
+      }
+    },
+    {
+      "name": "7. Complete Maintenance",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/maintenance/{{maintenanceId}}/complete?technicianName=Mike Johnson&notes=Maintenance completed successfully",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "maintenance", "{{maintenanceId}}", "complete"],
+          "query": [
+            {
+              "key": "technicianName",
+              "value": "Mike Johnson"
+            },
+            {
+              "key": "notes",
+              "value": "Maintenance completed successfully"
+            }
+          ]
+        },
+        "description": "Complete the maintenance with technician name and notes."
+      }
+    },
+    {
+      "name": "8. Get All Maintenance",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/maintenance",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "maintenance"]
+        },
+        "description": "Get all maintenance records to verify everything is working."
+      }
+    }
+  ]
+} 

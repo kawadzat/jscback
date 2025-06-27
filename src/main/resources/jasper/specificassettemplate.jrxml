@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="assettemplate" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="edba5577-0749-43b5-bbec-5afb09b92db0">
+
+    <style name="Table_TH" mode="Opaque" backcolor="#8FCCCC">
+        <box>
+            <topPen lineWidth="0.5" lineColor="#000000"/>
+            <bottomPen lineWidth="0.5" lineColor="#000000"/>
+        </box>
+    </style>
+    <style name="Table_CH" mode="Opaque" backcolor="#CFE6E6">
+        <box>
+            <topPen lineWidth="0.5" lineColor="#000000"/>
+            <bottomPen lineWidth="0.5" lineColor="#000000"/>
+        </box>
+    </style>
+    <style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+        <box>
+            <topPen lineWidth="0.5" lineColor="#000000"/>
+            <bottomPen lineWidth="0.5" lineColor="#000000"/>
+        </box>
+        <conditionalStyle>
+            <conditionExpression><![CDATA[$V{REPORT_COUNT}.intValue()%2==0]]></conditionExpression>
+            <style backcolor="#E3F2F2"/>
+        </conditionalStyle>
+    </style>
+
+    <parameter name="COMPANY_ADDRESS" class="java.lang.String"/>
+<!--    <parameter name="LOGO_PATH" class="java.lang.String"/>-->
+
+    <field name="date" class="java.util.Date"/>
+    <field name="initialRemarks" class="java.lang.String"/>
+    <field name="assetDisc" class="java.lang.String"/>
+<!--    <field name="assetQty" class="java.lang.Integer"/>-->
+    <field name="serialNo" class="java.lang.String"/>
+    <field name="invoiceNo" class="java.lang.String"/>
+    <field name="location" class="java.lang.String"/>
+    <field name="assetType" class="java.lang.String"/>
+    <field name="preparedBy" class="java.lang.String"/>
+
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+
+    <title>
+        <band height="90" splitType="Stretch">
+<!--            <image>-->
+<!--                <reportElement x="20" y="10" width="60" height="60" uuid="14300744-9fde-477a-8258-2d07aaa01330"/>-->
+<!--                <imageExpression><![CDATA[$P{LOGO_PATH}]]></imageExpression>-->
+<!--            </image>-->
+            <staticText>
+                <reportElement x="0" y="10" width="802" height="30" uuid="5c258340-8150-446b-847b-3469c281e72c"/>
+                <textElement textAlignment="Center">
+                    <font size="16"/>
+                </textElement>
+                <text><![CDATA[Judicial Service Commission]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="40" width="802" height="30" uuid="0b5ba814-7b78-4360-803d-3ad5989897dd"/>
+                <textElement textAlignment="Center">
+                    <font size="16"/>
+                </textElement>
+                <text><![CDATA[Asset Report]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="35" splitType="Stretch"/>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="80" height="20" uuid="c44c9ff5-b577-430f-9748-8f0a6958fcbd"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Date]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="80" y="0" width="90" height="20" uuid="cbf2f9ed-13cd-42e4-8642-0e59e4be4785"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Initial Remarks]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="170" y="0" width="90" height="20" uuid="1f3f4c0c-e2d7-4716-b6b4-4631f1ee2a7f"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Asset Description]]></text>
+            </staticText>
+<!--            <staticText>-->
+<!--                <reportElement x="260" y="0" width="70" height="20" uuid="2d1f1fea-47b4-476b-b3bf-8d6c4a9b9a94"/>-->
+<!--                <textElement textAlignment="Center" verticalAlignment="Middle">-->
+<!--                    <font size="10" isBold="true"/>-->
+<!--                </textElement>-->
+<!--                <text><![CDATA[Asset Quantity]]></text>-->
+<!--            </staticText>-->
+            <staticText>
+                <reportElement x="330" y="0" width="90" height="20" uuid="3a7d3955-27c9-47c7-86c4-5d3c7f0f5b7b"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Serial No]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="420" y="0" width="90" height="20" uuid="4f2b8945-9f65-4c3a-9f9d-8c257b2c9e1d"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Invoice No]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="510" y="0" width="90" height="20" uuid="5f3d2a4f-7c3d-4e44-8c9d-6d9c8c4f7c7a"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Location]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="600" y="0" width="90" height="20" uuid="6e8f8a6a-9f6a-4d3f-9f1f-8c1f7c4f7c7b"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Asset Type]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="690" y="0" width="112" height="20" uuid="7f9f9a7b-0f7a-5e5f-0f1f-9c1f8c5f8c8c"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Prepared By]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="20" splitType="Stretch">
+            <textField pattern="yyyy-MM-dd">
+                <reportElement x="0" y="0" width="80" height="20" uuid="0f7a6866-abd3-4b7a-a5b1-1dfa314a78df"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="80" y="0" width="90" height="20" uuid="ec9702a9-d99f-471d-b2db-89c1611a434d"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{initialRemarks}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="170" y="0" width="90" height="20" uuid="1e0e7c7d-2e2e-4f2f-9f9f-0c1f2c3f4c5d"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{assetDisc}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="330" y="0" width="90" height="20" uuid="a01a9e05-b315-42b4-bc34-1239dc4533db"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{serialNo}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="420" y="0" width="90" height="20" uuid="d226421e-070d-45b3-be7a-284ed47ea264"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{invoiceNo}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="510" y="0" width="90" height="20" uuid="b6a94865-ecd6-40f0-99e9-04513f9b8356"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{location}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="600" y="0" width="90" height="20" uuid="acaab0a4-bf55-4123-b670-b4d6d39644eb"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{assetType}]]></textFieldExpression>
+            </textField>
+
+        </band>
+    </detail>
+
+    <columnFooter>
+        <band height="56" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="26" width="802" height="30" uuid="19c13abc-4562-4dca-b5b4-21e3d7bae64e"/>
+                <textElement textAlignment="Center">
+                    <font size="12"/>
+                </textElement>
+                <text><![CDATA[WORLD CLASS JUSTICE SYSTEM]]></text>
+            </staticText>
+        </band>
+    </columnFooter>
+
+    <pageFooter>
+        <band height="54" splitType="Stretch"/>
+    </pageFooter>
+
+    <summary>
+        <band height="42" splitType="Stretch"/>
+    </summary>
+</jasperReport>

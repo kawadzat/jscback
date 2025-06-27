@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "Laptop-Antivirus Relationship Test",
+    "description": "Test collection to verify the laptop-antivirus relationship is working correctly",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "laptopId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create Laptop (if needed)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"purchaseDate\": \"2024-01-01\",\n  \"manufacturer\": \"Dell\",\n  \"serialNumber\": \"DELL123456\",\n  \"model\": \"Latitude 5520\",\n  \"ram\": 16,\n  \"processor\": 8,\n  \"issueDate\": \"2024-01-15\",\n  \"status\": \"AVAILABLE\",\n  \"issuedTo\": \"John Doe\",\n  \"department\": \"IT\",\n  \"designation\": \"Developer\",\n  \"email\": \"john.doe@company.com\",\n  \"replacementDate\": \"2027-01-01\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/laptop/create",
+          "host": ["{{baseUrl}}"],
+          "path": ["laptop", "create"]
+        },
+        "description": "Create a laptop using the itinventory controller. This will be used for testing the antivirus relationship."
+      }
+    },
+    {
+      "name": "2. Get All Laptops",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/laptop/getAll",
+          "host": ["{{baseUrl}}"],
+          "path": ["laptop", "getAll"]
+        },
+        "description": "Get all laptops to verify the laptop was created and get its ID."
+      }
+    },
+    {
+      "name": "3. Add Norton Antivirus to Laptop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Norton Antivirus Plus\",\n  \"key\": \"NORTON-2024-ABC123\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.1.0\",\n  \"vendor\": \"Norton\",\n  \"licenseExpirationDate\": \"2025-12-31T23:59:59\",\n  \"lastScanDate\": \"2024-01-15T10:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "laptop", "{{laptopId}}"]
+        },
+        "description": "Add Norton antivirus to the specified laptop. This tests the relationship."
+      }
+    },
+    {
+      "name": "4. Add McAfee Antivirus to Laptop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"McAfee Total Protection\",\n  \"key\": \"MCAFEE-2024-XYZ789\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.2.0\",\n  \"vendor\": \"McAfee\",\n  \"licenseExpirationDate\": \"2025-06-30T23:59:59\",\n  \"lastScanDate\": \"2024-01-20T14:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "laptop", "{{laptopId}}"]
+        },
+        "description": "Add McAfee antivirus to the same laptop to test multiple antivirus software."
+      }
+    },
+    {
+      "name": "5. Get All Antivirus",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus"]
+        },
+        "description": "Get all antivirus records to verify they were created."
+      }
+    },
+    {
+      "name": "6. Get Antivirus by Key",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/key/NORTON-2024-ABC123",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "key", "NORTON-2024-ABC123"]
+        },
+        "description": "Get antivirus by its unique key."
+      }
+    },
+    {
+      "name": "7. Search Antivirus by Vendor",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/search/vendor?vendor=Norton",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "search", "vendor"],
+          "query": [
+            {
+              "key": "vendor",
+              "value": "Norton"
+            }
+          ]
+        },
+        "description": "Search for antivirus software by vendor name."
+      }
+    },
+    {
+      "name": "8. Get Installed Antivirus",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/installed",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "installed"]
+        },
+        "description": "Get all installed antivirus software."
+      }
+    },
+    {
+      "name": "9. Check Key Exists",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/check-key?key=NORTON-2024-ABC123",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "check-key"],
+          "query": [
+            {
+              "key": "key",
+              "value": "NORTON-2024-ABC123"
+            }
+          ]
+        },
+        "description": "Check if an antivirus key already exists."
+      }
+    },
+    {
+      "name": "10. Get Expiring Licenses",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/expiring?date=2024-06-30T23:59:59",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "expiring"],
+          "query": [
+            {
+              "key": "date",
+              "value": "2024-06-30T23:59:59"
+            }
+          ]
+        },
+        "description": "Get antivirus licenses that are expiring before a specific date."
+      }
+    }
+  ]
+} 

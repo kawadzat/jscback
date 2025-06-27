@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.2.final using JasperReports Library version 6.21.2-8434a0bd7c3bbc37cbf916f2968d35e4b165821a  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="assettemplate" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="edba5577-0749-43b5-bbec-5afb09b92db0">
+
+    <style name="Table_TH" mode="Opaque" backcolor="#8FCCCC">
+        <box>
+            <topPen lineWidth="0.5" lineColor="#000000"/>
+            <bottomPen lineWidth="0.5" lineColor="#000000"/>
+        </box>
+    </style>
+    <style name="Table_CH" mode="Opaque" backcolor="#CFE6E6">
+        <box>
+            <topPen lineWidth="0.5" lineColor="#000000"/>
+            <bottomPen lineWidth="0.5" lineColor="#000000"/>
+        </box>
+    </style>
+    <style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+        <box>
+            <topPen lineWidth="0.5" lineColor="#000000"/>
+            <bottomPen lineWidth="0.5" lineColor="#000000"/>
+        </box>
+        <conditionalStyle>
+            <conditionExpression><![CDATA[$V{REPORT_COUNT}.intValue()%2==0]]></conditionExpression>
+            <style backcolor="#E3F2F2"/>
+        </conditionalStyle>
+    </style>
+
+    <parameter name="COMPANY_ADDRESS" class="java.lang.String"/>
+    <parameter name="LOGO_PATH" class="java.lang.String"/>
+
+    <field name="name" class="java.lang.String"/>
+    <field name="total" class="java.lang.Long"/>
+
+    <!--    <queryString>-->
+    <!--        <![CDATA[]]>-->
+    <!--    </queryString>-->
+
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+
+    <title>
+        <band height="90" splitType="Stretch">
+            <image>
+                <reportElement x="20" y="10" width="60" height="60" uuid="14300744-9fde-477a-8258-2d07aaa01330"/>
+                <imageExpression><![CDATA[$P{LOGO_PATH}]]></imageExpression>
+            </image>
+            <staticText>
+                <reportElement x="0" y="10" width="570" height="30" uuid="5c258340-8150-446b-847b-3469c281e72c"/>
+                <textElement textAlignment="Center">
+                    <font size="16"/>
+                </textElement>
+                <text><![CDATA[Judicial Service Commission]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="40" width="570" height="30" uuid="0b5ba814-7b78-4360-803d-3ad5989897dd"/>
+                <textElement textAlignment="Center">
+                    <font size="16"/>
+                </textElement>
+                <text><![CDATA[Station Asset Report]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="35" splitType="Stretch"/>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="87" y="0" width="200" height="20" uuid="c44c9ff5-b577-430f-9748-8f0a6958fcbd"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Asset Name]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="287" y="0" width="200" height="20" uuid="cbf2f9ed-13cd-42e4-8642-0e59e4be4785"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="20" splitType="Stretch">
+            <textField>
+                <reportElement x="87" y="0" width="200" height="20" uuid="0f7a6866-abd3-4b7a-a5b1-1dfa314a78df"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="287" y="0" width="200" height="20" uuid="ec9702a9-d99f-471d-b2db-89c1611a434d"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <columnFooter>
+        <band height="56" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="26" width="570" height="30" uuid="19c13abc-4562-4dca-b5b4-21e3d7bae64e"/>
+                <textElement textAlignment="Center">
+                    <font size="12"/>
+                </textElement>
+                <text><![CDATA[Generated By SecureCapital @ 2024]]></text>
+            </staticText>
+        </band>
+    </columnFooter>
+
+    <pageFooter>
+        <band height="54" splitType="Stretch"/>
+    </pageFooter>
+
+    <summary>
+        <band height="42" splitType="Stretch"/>
+    </summary>
+</jasperReport>

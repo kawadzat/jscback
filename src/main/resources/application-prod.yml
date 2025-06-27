@@ -1,0 +1,55 @@
+jwt:
+  secret: mysupercomplexsecret
+server:
+  error:
+    whitelabel:
+      enabled: false
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+    password: VwWj2Xir4ptLvTfI
+    username: postgres.ixgfpgwnthmehtozgpuf
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8DBDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        globally_quoted_indentifiers: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    spring:
+      servlet:
+        multipart:
+          enabled: true
+          file-size-threshold: 2KB
+          max-file-size: 200MB
+          max-request-size: 215MB
+#  sql:
+#    init:
+#      mode: never
+#      continue-on-error: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: javaspringboot7@gmail.com
+    password: gpceghqgktqlvfye
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+swagger:
+  api:
+    title: Your API Title Here
+    description: Your API Description Here
+    version: Your API Version Here
+    termsOfServiceUrl: Your Terms of Service URL Here
+    contact:
+      name: Your Contact Name Here
+      url: Your Contact URL Here
+

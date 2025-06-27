@@ -1,0 +1,73 @@
+jwt:
+  secret: mysupercomplexsecret
+server:
+  error:
+    whitelabel:
+      enabled: false
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:mysql://10.41.0.4:3307/securecapital1
+    password: password
+    username: app
+    initialization-mode: never
+    jpa:
+      database-platform: org.hibernate.dialect.MySQL8DBDialect
+      generate-ddl: true
+      show-sql: false
+      hibernate:
+        ddl-auto: update
+      properties:
+        hibernate:
+          globally_quoted_indentifiers: true
+          dialect: org.hibernate.dialect.MySQL8Dialect
+          format_sql: true
+      spring:
+        servlet:
+          multipart:
+            enabled: true
+            file-size-threshold: 2KB
+            max-file-size: 200MB
+            max-request-size: 215MB
+    sql:
+      init:
+        mode: never
+        continue-on-error: false
+
+    mail:
+      host: smtp.gmail.com
+      port: 587
+      username: javaspringboot7@gmail.com
+      password: gpceghqgktqlvfye
+      properties:
+        mail:
+          smtp:
+            auth: true
+            timeout: 20000
+            starttls:
+              enable: true
+              required: true
+  swagger:
+    api:
+      title: SecureCapital
+      description: API for Secure Capital
+      version: 0.9
+      termsOfServiceUrl: google.com
+      contact:
+        name: Your Contact Name Here
+        url: Your Contact URL Here
+
+  frontend:
+    url: http://localhost:4200
+    resetUrl: /user/verify/password
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: /admin
+
+infor:
+  app-name: JSC Administration App
+
+

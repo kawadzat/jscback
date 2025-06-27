@@ -1,0 +1,87 @@
+{
+  "info": {
+    "name": "Add Antivirus to Laptop API",
+    "description": "API collection for adding antivirus software to laptops",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "laptopId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Add Antivirus to Laptop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Norton Antivirus\",\n  \"key\": \"NORTON-2024-ABC123\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.1.0\",\n  \"vendor\": \"Norton\",\n  \"licenseExpirationDate\": \"2025-12-31T23:59:59\",\n  \"lastScanDate\": \"2024-01-15T10:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "laptop", "{{laptopId}}"]
+        },
+        "description": "Adds antivirus software to a specific laptop. The antivirus will be automatically set as installed and active."
+      }
+    },
+    {
+      "name": "Add McAfee Antivirus to Laptop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"McAfee Antivirus Plus\",\n  \"key\": \"MCAFEE-2024-XYZ789\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.2.0\",\n  \"vendor\": \"McAfee\",\n  \"licenseExpirationDate\": \"2025-06-30T23:59:59\",\n  \"lastScanDate\": \"2024-01-20T14:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "laptop", "{{laptopId}}"]
+        },
+        "description": "Adds McAfee antivirus software to a specific laptop."
+      }
+    },
+    {
+      "name": "Add Kaspersky Antivirus to Laptop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Kaspersky Internet Security\",\n  \"key\": \"KASPERSKY-2024-DEF456\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.1.5\",\n  \"vendor\": \"Kaspersky\",\n  \"licenseExpirationDate\": \"2025-03-15T23:59:59\",\n  \"lastScanDate\": \"2024-01-18T09:15:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/antivirus/laptop/{{laptopId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "antivirus", "laptop", "{{laptopId}}"]
+        },
+        "description": "Adds Kaspersky antivirus software to a specific laptop."
+      }
+    }
+  ]
+} 
