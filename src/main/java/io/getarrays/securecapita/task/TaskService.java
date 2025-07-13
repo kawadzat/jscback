@@ -41,6 +41,7 @@ public class TaskService {
     private final CodeGeneratorService codeGeneratorService;
 
     private final EmailService emailService;
+    private final RepetitiveTaskReminderService repetitiveTaskReminderService;
 
     public TaskDto getTaskById(Long taskId) {
         return entityToDto(findTaskByIdOrThrow(taskId));
@@ -95,9 +96,22 @@ public class TaskService {
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
         task.setPriority(PriorityEnum.valueOf(taskDto.getPriority()));
+        task.setType(TaskTypeEnum.valueOf(taskDto.getType()));
         task.setStartDate(taskDto.getStartDate());
         task.setDueDate(taskDto.getDueDate());
         task.setStatus(TaskStatusEnum.valueOf(taskDto.getStatus()));
+        
+        // Handle time interval for repetitive tasks
+        if (task.getType() == TaskTypeEnum.REPETITIVE) {
+            task.setTimeIntervalValue(taskDto.getTimeIntervalValue());
+            if (taskDto.getTimeIntervalUnit() != null) {
+                task.setTimeIntervalUnit(TimeIntervalUnit.valueOf(taskDto.getTimeIntervalUnit()));
+            }
+            // Calculate next repetition date
+            task.setNextRepetitionDate(calculateNextRepetitionDate(taskDto.getDueDate(), 
+                taskDto.getTimeIntervalValue(), 
+                TimeIntervalUnit.valueOf(taskDto.getTimeIntervalUnit())));
+        }
         task.setInitiatedUser(userRepository.get(currentUser.getId()));
         Set<User> assignedUsers = new HashSet<>(userRepository1.findAllById(taskDto.getAssignedUserIds()));
         if (assignedUsers.size() != taskDto.getAssignedUserIds().size()) {
@@ -116,7 +130,13 @@ public class TaskService {
         taskDto.setStartDate(taskEntity.getStartDate());
         taskDto.setDueDate(taskEntity.getDueDate());
         taskDto.setPriority(taskEntity.getPriority().name());
+        // Add null check for type
+        taskDto.setType(taskEntity.getType() != null ? taskEntity.getType().name() : "UNKNOWN");
         taskDto.setStatus(taskEntity.getStatus().name());
+        taskDto.setTimeIntervalValue(taskEntity.getTimeIntervalValue());
+        if (taskEntity.getTimeIntervalUnit() != null) {
+            taskDto.setTimeIntervalUnit(taskEntity.getTimeIntervalUnit().name());
+        }
         taskDto.setInitiatedUser(UserDTOMapper.fromUser(taskEntity.getInitiatedUser()));
         taskDto.setAssignedUsers(taskEntity.getAssignedUsers().stream().map(UserDTOMapper::fromUser).collect(Collectors.toSet()));
         taskDto.setAssignedUserIds(taskEntity.getAssignedUsers().stream().map(User::getId).collect(Collectors.toSet()));
@@ -126,6 +146,45 @@ public class TaskService {
     private String generateCode() {
         int code = codeGeneratorService.generateCode("Task-");
         return "Task-" + code;
+    }
+
+    /**
+     * Calculate the next repetition date based on the current due date and time interval
+     * 
+     * @param currentDueDate the current due date
+     * @param intervalValue the interval value
+     * @param intervalUnit the interval unit
+     * @return the next repetition date
+     */
+    private Date calculateNextRepetitionDate(Date currentDueDate, Integer intervalValue, TimeIntervalUnit intervalUnit) {
+        if (currentDueDate == null || intervalValue == null || intervalUnit == null) {
+            return null;
+        }
+
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTime(currentDueDate);
+
+        switch (intervalUnit) {
+            case DAY:
+                calendar.add(java.util.Calendar.DAY_OF_MONTH, intervalValue);
+                break;
+            case WEEK:
+                calendar.add(java.util.Calendar.WEEK_OF_YEAR, intervalValue);
+                break;
+            case MONTH:
+                calendar.add(java.util.Calendar.MONTH, intervalValue);
+                break;
+            case QUARTER:
+                calendar.add(java.util.Calendar.MONTH, intervalValue * 3);
+                break;
+            case YEAR:
+                calendar.add(java.util.Calendar.YEAR, intervalValue);
+                break;
+            default:
+                return null;
+        }
+
+        return calendar.getTime();
     }
 
     public void updateTaskStatus(UserDTO currentUser, Long taskId, String status) {
@@ -153,6 +212,11 @@ public class TaskService {
 
         task = taskRepository.save(task);
         sendUpdateEmail(task);
+        
+        // If this is a repetitive task that was completed, send reminder for next cycle
+        if (task.getType() == TaskTypeEnum.REPETITIVE && task.getStatus() == TaskStatusEnum.COMPLETED) {
+            repetitiveTaskReminderService.createNextCycleForCompletedTask(task);
+        }
     }
 
     private void sendUpdateEmail(Task task) {

@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -188,13 +189,31 @@ public class UserServiceImpl implements UserService {
         return mapToUserDTO(userRepository.updateUserDetails(user));
     }
 
+//    @Override
+//    @Transactional
+//    public UserDTO getUserById(Long userId) {
+//        User user=userRepository1.findById(userId).get();
+//        Hibernate.initialize(user.getRoles());
+//        return mapToUserDTO(user);
+//    }
+//
+
+
+
     @Override
     @Transactional
     public UserDTO getUserById(Long userId) {
-        User user=userRepository1.findById(userId).get();
+        User user = userRepository1.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
         Hibernate.initialize(user.getRoles());
         return mapToUserDTO(user);
     }
+
+
+
+
+
+
 
 
     @Override

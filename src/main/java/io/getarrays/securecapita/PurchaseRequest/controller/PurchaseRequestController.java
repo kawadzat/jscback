@@ -23,8 +23,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import io.getarrays.securecapita.repository.implementation.UserRepository1;
+import io.getarrays.securecapita.domain.User;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/PurchaseRequest")
@@ -33,6 +37,9 @@ import java.io.File;
 public class PurchaseRequestController {
     @Autowired
     PurchaseRequestServiceInterface purchaseRequestService;
+
+    @Autowired
+    private UserRepository1 userRepository1;
 
     PurchaseRequestServiceReport purchaseRequestServiceReport;
 
@@ -85,6 +92,27 @@ public class PurchaseRequestController {
                                      @RequestBody @Validated PurchaseRequestApprovalDto approvalRequestDto) throws Exception {
         return ResponseEntity.ok(new CustomMessage("Purchase Request approved/rejected Successfully",
                 purchaseRequestService.approvePurchaseRequest(currentUser, purchaseRequestId, approvalRequestDto)));
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDTO>> getUsers(@RequestParam(value = "search", required = false) String search) {
+        List<User> users;
+        if (search != null && !search.isEmpty()) {
+            users = userRepository1.findByNameOrEmailContainingIgnoreCase(search);
+        } else {
+            users = userRepository1.findAll();
+        }
+        List<UserDTO> userDTOs = users.stream()
+            .map(user -> {
+                UserDTO dto = new UserDTO();
+                dto.setId(user.getId());
+                dto.setFirstName(user.getFirstName());
+                dto.setLastName(user.getLastName());
+                dto.setEmail(user.getEmail());
+                return dto;
+            })
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(userDTOs);
     }
 }
 

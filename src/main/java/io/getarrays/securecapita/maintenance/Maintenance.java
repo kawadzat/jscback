@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.getarrays.securecapita.itauditing.Auditable;
 import io.getarrays.securecapita.itinventory.Laptop;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -31,17 +29,14 @@ public class Maintenance extends Auditable<String> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Maintenance type is required")
-    @Column(name = "maintenance_type", nullable = false)
+    @Column(name = "maintenance_type")
     @Enumerated(EnumType.STRING)
     private MaintenanceType maintenanceType;
 
-    @NotBlank(message = "Description is required")
-    @Column(name = "description", nullable = false)
+    @Column(name = "description")
     private String description;
 
-    @NotNull(message = "Scheduled date is required")
-    @Column(name = "scheduled_date", nullable = false)
+    @Column(name = "scheduled_date")
     private LocalDateTime scheduledDate;
 
     @Column(name = "completed_date")
@@ -50,8 +45,7 @@ public class Maintenance extends Auditable<String> {
     @Column(name = "technician_name")
     private String technicianName;
 
-    @NotNull(message = "Status is required")
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private MaintenanceStatus status;
 
@@ -63,7 +57,41 @@ public class Maintenance extends Auditable<String> {
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "laptop_id", nullable = false)
+    @JoinColumn(name = "laptop_id")
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Laptop laptop;
+
+    // JPA lifecycle callback to ensure required fields are set
+    @PrePersist
+    @PreUpdate
+    public void validateAndSetDefaults() {
+        // Ensure description is never null or empty
+        if (description == null || description.trim().isEmpty()) {
+            if (laptop != null && laptop.getId() != null) {
+                description = "Scheduled maintenance for laptop " + laptop.getId();
+            } else {
+                description = "Scheduled maintenance task";
+            }
+        }
+        
+        // Ensure maintenance type is never null
+        if (maintenanceType == null) {
+            maintenanceType = MaintenanceType.PREVENTIVE;
+        }
+        
+        // Ensure scheduled date is never null
+        if (scheduledDate == null) {
+            scheduledDate = LocalDateTime.now().plusDays(1);
+        }
+        
+        // Ensure status is never null
+        if (status == null) {
+            status = MaintenanceStatus.SCHEDULED;
+        }
+        
+        // Ensure priority is never null
+        if (priority == null) {
+            priority = MaintenancePriority.MEDIUM;
+        }
+    }
 } 

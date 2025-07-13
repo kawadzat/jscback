@@ -19,7 +19,8 @@ public abstract class Auditable <U> {
 
 //adding user to station assign and unassign to station, user should add assert to station he belongs to
     //tell me more,lets start simple add user to station
-    @Column(name="created_by", columnDefinition="VARCHAR(1000)")
+    @CreatedBy
+    @Column(name="created_by", columnDefinition="VARCHAR(255)")
     private U createdBy;
 
     @CreatedDate
@@ -27,11 +28,11 @@ public abstract class Auditable <U> {
     private Date createdDate;
 
     @LastModifiedBy
-    @Column(name = "last_modified_by",columnDefinition="VARCHAR(1000)" )
+    @Column(name = "last_modified_by", columnDefinition="VARCHAR(255)")
     private U lastModifiedBy;
 
     @LastModifiedDate
-    @Column(name = "last_modified_date",columnDefinition="VARCHAR(1000)")
+    @Column(name = "last_modified_date")
     private Date lastModifiedDate;
 
     public U getCreatedBy() {

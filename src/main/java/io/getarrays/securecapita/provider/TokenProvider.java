@@ -80,6 +80,9 @@ public class TokenProvider {
 
     public List<GrantedAuthority>getAuthorities(String token) {
         String[] claims = getClaimsFromToken(token);
+        if (claims == null) {
+            return java.util.Collections.emptyList();
+        }
         return stream(claims).map(SimpleGrantedAuthority::new).collect(toList());
     }
 

@@ -1,6 +1,7 @@
 package io.getarrays.securecapita.task;
 
 import io.getarrays.securecapita.dto.UserDTO;
+import io.getarrays.securecapita.task.validation.RepetitiveTaskTimeInterval;
 import io.getarrays.securecapita.utils.TodayOrFuture;
 import io.getarrays.securecapita.utils.ValidEnum;
 import jakarta.validation.constraints.*;
@@ -13,6 +14,7 @@ import java.util.Set;
 
 @Getter
 @Setter
+@RepetitiveTaskTimeInterval
 public class TaskDto {
     private Long id;
 
@@ -37,9 +39,18 @@ public class TaskDto {
     @ValidEnum(enumClass = PriorityEnum.class, message = "Invalid priority value")
     private String priority;
 
+    @NotNull(message = "type is required")
+    @ValidEnum(enumClass = TaskTypeEnum.class, message = "Invalid task type value")
+    private String type;
+
     @NotNull(message = "status is required")
     @ValidEnum(enumClass = TaskStatusEnum.class, message = "Invalid status value")
     private String status;
+
+    private Integer timeIntervalValue;
+
+    @ValidEnum(enumClass = TimeIntervalUnit.class, message = "Invalid time interval unit value")
+    private String timeIntervalUnit;
 
     private UserDTO initiatedUser;
 

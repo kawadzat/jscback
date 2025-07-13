@@ -53,4 +53,7 @@ public class PurchaseRequestEntity extends Auditable<String> {
     @Enumerated(EnumType.STRING)
     @Nonnull
     private PurchaseRequestStatusEnum status;
+
+    @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL)
+    private List<TimelineEvent> timeline;
 }

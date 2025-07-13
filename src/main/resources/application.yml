@@ -6,8 +6,8 @@ server:
       enabled: false
   port: 8080
 spring:
-#  profiles:
-#    active: dev
+  #  profiles:
+  #    active: dev
   datasource:
     url: jdbc:mysql://localhost:3307/securecapita?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull
     password:
@@ -63,4 +63,3 @@ swagger:
 frontend:
   url: https://processmanagement.tanawellnesscoaching.com
   resetUrl: /user/verify/password
-

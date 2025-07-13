@@ -2,7 +2,10 @@ package io.getarrays.securecapita.itinventory;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
+import io.getarrays.securecapita.antivirus.AntivirusDto;
 import io.getarrays.securecapita.maintenance.MaintenanceDto;
 import io.getarrays.securecapita.maintenance.Maintenance;
 import io.getarrays.securecapita.maintenance.MaintenanceStatus;
@@ -16,6 +19,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +33,13 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LaptopDto {
-    private List<MaintenanceDto> maintenanceList;
+    @Builder.Default
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<MaintenanceDto> maintenanceList = new ArrayList<>();
+
+    @Builder.Default
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<AntivirusDto> antivirusList = new ArrayList<>();
     private Long id;
     @NotNull(message = "Purchase date is required")
     @Temporal(TemporalType.TIMESTAMP)
@@ -60,6 +70,9 @@ public class LaptopDto {
     @NotBlank(message = "IssuedTo is required")
     private String issuedTo;
 
+    @NotBlank(message = "station is required")
+    @Size(max = 100, message = "station name must not exceed 100 characters")
+    private String station;
 
     @NotBlank(message = "department is required")
     @Size(max = 100, message = "department name must not exceed 100 characters")
@@ -78,6 +91,8 @@ public class LaptopDto {
     @NotNull(message = "Replacement date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date replacementDate;
+
+    private String issueByEmail;
 
     public void setMaintenanceList(List<MaintenanceDto> maintenanceList) {
         this.maintenanceList = maintenanceList;

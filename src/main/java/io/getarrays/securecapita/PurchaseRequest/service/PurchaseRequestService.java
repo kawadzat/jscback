@@ -6,6 +6,7 @@ import io.getarrays.securecapita.PurchaseRequest.dto.PurchaseRequestItemDto;
 import io.getarrays.securecapita.PurchaseRequest.entity.PurchaseRequestApprovalHistory;
 import io.getarrays.securecapita.PurchaseRequest.entity.PurchaseRequestEntity;
 import io.getarrays.securecapita.PurchaseRequest.entity.PurchaseRequestItemEntity;
+import io.getarrays.securecapita.PurchaseRequest.entity.TimelineEvent;
 import io.getarrays.securecapita.PurchaseRequest.enums.PurchaseRequestStatusEnum;
 import io.getarrays.securecapita.PurchaseRequest.repository.PurchaseRequestProductRepo;
 import io.getarrays.securecapita.PurchaseRequest.repository.PurchaseRequestRepo;
@@ -99,17 +100,13 @@ public class PurchaseRequestService implements PurchaseRequestServiceInterface {
 
     @Override
     public PurchaseRequestDto createPurchaseRequest(UserDTO userDTO, PurchaseRequestDto purchaseRequestDto) {
-
         PurchaseRequestEntity purchaseRequest = new PurchaseRequestEntity();
         purchaseRequest.setDate(purchaseRequestDto.getDate());
         purchaseRequest.setDepartment(departmentService.findDepartmentByIdOrThrow(purchaseRequestDto.getDepartmentId()));
-
         purchaseRequest.setCode(generateCode(purchaseRequest));
-
         purchaseRequest.setReason(purchaseRequestDto.getReason());
         final PurchaseRequestEntity pr = purchaseRequest;
         List<PurchaseRequestItemEntity> requestItems = purchaseRequestDto.getRequestItems().stream().map(itemDto -> {
-
             PurchaseRequestItemEntity item = new PurchaseRequestItemEntity();
             item.setDate(itemDto.getDate());
             item.setRef(itemDto.getRef());
@@ -122,11 +119,19 @@ public class PurchaseRequestService implements PurchaseRequestServiceInterface {
             return item;
         }).collect(Collectors.toList());
         purchaseRequest.setStatus(PurchaseRequestStatusEnum.INITIATED);
-
         purchaseRequest.setRequestItems(requestItems);
         addApprovalHistory(userDTO, purchaseRequest, purchaseRequestDto.getSignature(),
                 PurchaseRequestStatusEnum.INITIATED);
-        purchaseRequest= purchaseRequestRepo.save(purchaseRequest);
+        // Add timeline event for creation
+        TimelineEvent timelineEvent = TimelineEvent.builder()
+            .purchaseRequest(purchaseRequest)
+            .eventType("CREATED")
+            .description("Purchase request created by user: " + userDTO.getFirstName() + " " + userDTO.getLastName())
+            .eventDate(new Date())
+            .user(userRepository1.findByEmail(userDTO.getEmail()).orElse(null))
+            .build();
+        purchaseRequest.setTimeline(List.of(timelineEvent));
+        purchaseRequest = purchaseRequestRepo.save(purchaseRequest);
         sendEmailToNextApprovers(purchaseRequest, userDTO);
         return entityToDto(purchaseRequest);
     }
@@ -193,27 +198,44 @@ public class PurchaseRequestService implements PurchaseRequestServiceInterface {
 
         String userRole = currentUser.getRoleName();
         PurchaseRequestStatusEnum currentStatus = purchaseRequest.getStatus();
-        PurchaseRequestStatusEnum nextStatus = currentStatus.getNext();
+        PurchaseRequestStatusEnum nextStatus = null;
 
         // Validate if the user has the required role to approve the current status
         if (!nextStatus.getRoles().contains(userRole)) {
             throw new NotAuthorizedException("User role not authorized to approve/reject this purchase request");
         }
 
+        String eventType;
+        String description;
         if (purchaseRequestApprovalDto.isApprove()) {
-
             // Ensure user is authorized for the next stage
             if (!nextStatus.getRoles().contains(userRole)) {
                 throw new NotAuthorizedException("User role not authorized for the next approval stage");
             }
+            eventType = "APPROVED";
+            description = "Purchase request approved by user: " + currentUser.getFirstName() + " " + currentUser.getLastName();
         } else { // Handle rejection
             if (currentStatus.equals(PurchaseRequestStatusEnum.RECEIVED)) {
                 throw new BadRequestException("Purchase Request is already received and cannot be rejected");
             }
             nextStatus = PurchaseRequestStatusEnum.REJECTED;
+            eventType = "REJECTED";
+            description = "Purchase request rejected by user: " + currentUser.getFirstName() + " " + currentUser.getLastName();
         }
         purchaseRequest.setStatus(nextStatus);
         addApprovalHistory(currentUser, purchaseRequest, purchaseRequestApprovalDto.getSignature(), nextStatus);
+        // Add timeline event for approval/rejection
+        List<TimelineEvent> timeline = purchaseRequest.getTimeline();
+        if (timeline == null) timeline = new ArrayList<>();
+        TimelineEvent timelineEvent = TimelineEvent.builder()
+            .purchaseRequest(purchaseRequest)
+            .eventType(eventType)
+            .description(description)
+            .eventDate(new Date())
+            .user(userRepository1.findByEmail(currentUser.getEmail()).orElse(null))
+            .build();
+        timeline.add(timelineEvent);
+        purchaseRequest.setTimeline(timeline);
         sendEmailToNextApprovers(purchaseRequestRepo.save(purchaseRequest), currentUser);
         return true;
     }
@@ -236,5 +258,49 @@ public class PurchaseRequestService implements PurchaseRequestServiceInterface {
         int code = codeGeneratorService.generateCode("PurchaseRequest-"+prefix);
 
         return "PR-" + prefix + "-" + code;
+    }
+
+    public PurchaseRequestDto updatePurchaseRequest(UserDTO currentUser, Long purchaseRequestId, PurchaseRequestDto updatedDto) {
+        PurchaseRequestEntity purchaseRequest = purchaseRequestRepo.findById(purchaseRequestId)
+            .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found with id: " + purchaseRequestId));
+
+        // Update fields (example: reason, date, department, items)
+        purchaseRequest.setReason(updatedDto.getReason());
+        purchaseRequest.setDate(updatedDto.getDate());
+        if (updatedDto.getDepartmentId() != null) {
+            purchaseRequest.setDepartment(departmentService.findDepartmentByIdOrThrow(updatedDto.getDepartmentId()));
+        }
+        // Update items if provided
+        if (updatedDto.getRequestItems() != null) {
+            List<PurchaseRequestItemEntity> requestItems = updatedDto.getRequestItems().stream().map(itemDto -> {
+                PurchaseRequestItemEntity item = new PurchaseRequestItemEntity();
+                item.setDate(itemDto.getDate());
+                item.setRef(itemDto.getRef());
+                item.setItemNumber(itemDto.getNumber());
+                item.setItemDescription(itemDto.getDescription());
+                item.setUnitPrice(itemDto.getUnitPrice());
+                item.setEstimatedValue(itemDto.getEstimatedValue());
+                item.setQuantity(itemDto.getQuantity());
+                return item;
+            }).collect(Collectors.toList());
+            for (PurchaseRequestItemEntity item : requestItems) {
+                item.setPurchaseRequest(purchaseRequest);
+            }
+            purchaseRequest.setRequestItems(requestItems);
+        }
+        // Add timeline event for edit
+        List<TimelineEvent> timeline = purchaseRequest.getTimeline();
+        if (timeline == null) timeline = new ArrayList<>();
+        TimelineEvent timelineEvent = TimelineEvent.builder()
+            .purchaseRequest(purchaseRequest)
+            .eventType("EDITED")
+            .description("Purchase request edited by user: " + currentUser.getFirstName() + " " + currentUser.getLastName())
+            .eventDate(new Date())
+            .user(userRepository1.findByEmail(currentUser.getEmail()).orElse(null))
+            .build();
+        timeline.add(timelineEvent);
+        purchaseRequest.setTimeline(timeline);
+        purchaseRequest = purchaseRequestRepo.save(purchaseRequest);
+        return entityToDto(purchaseRequest);
     }
 }

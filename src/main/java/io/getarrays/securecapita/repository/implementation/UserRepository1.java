@@ -49,4 +49,7 @@ public interface UserRepository1 extends JpaRepository<User, Long> {
             "AND (:currentUserId is null OR u.id <> :currentUserId)")
     List<User> findByDepartmentIdAndStationIdIn(Long currentUserId, List<Long> departmentIds, List<Long> stationIds);
 
+    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
+    List<User> findByNameOrEmailContainingIgnoreCase(String search);
+
 }

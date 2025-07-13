@@ -79,13 +79,18 @@ public class Laptop   extends Auditable<String> {
      */
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20, nullable = false)
+    @Column(name = "status", length = 50, nullable = false)
     private LaptopStatus status;
 
     @NotBlank(message = "IssuedTo is required")
     @Size(max = 100, message = "IssuedTo name must not exceed 100 characters")
     @Column(name = "issued_to", length = 100, nullable = false)
     private String issuedTo;
+
+    @NotBlank(message = "station is required")
+    @Size(max = 100, message = "station name must not exceed 100 characters")
+    @Column(name = "station", length = 100, nullable = false)
+    private String station;
 
 
     @NotBlank(message = "department is required")
@@ -112,12 +117,15 @@ public class Laptop   extends Auditable<String> {
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Date replacementDate;
 
+    @Column(name = "issue_by_email", length = 255)
+    private String issueByEmail;
+
     @OneToMany(mappedBy = "laptop", cascade = CascadeType.ALL, orphanRemoval = true)
     @com.fasterxml.jackson.annotation.JsonManagedReference
     private List<Maintenance> maintenanceList = new ArrayList<>();
 
     @OneToMany(mappedBy = "laptop", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonBackReference
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     private List<Antivirus> antivirusList = new ArrayList<>();
 
 

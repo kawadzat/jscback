@@ -92,5 +92,17 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
                                                         @Param("stationId") Long stationId,
                                                         @Param("departmentId") Long departmentId);
 
+    // Repetitive task reminder queries
+    @Query("SELECT t FROM Task t WHERE t.type = 'REPETITIVE' AND t.status IN ('PENDING', 'IN_PROGRESS')")
+    List<Task> findRepetitiveTasksNeedingReminders();
+
+    @Query("SELECT t FROM Task t WHERE t.type = 'REPETITIVE' AND t.nextRepetitionDate <= :reminderDate AND t.status IN ('PENDING', 'IN_PROGRESS')")
+    List<Task> findRepetitiveTasksDueForReminders(@Param("reminderDate") Date reminderDate);
+
+    @Query("SELECT t FROM Task t WHERE t.type = 'REPETITIVE' AND t.nextRepetitionDate IS NOT NULL AND t.nextRepetitionDate <= :dueDate")
+    List<Task> findRepetitiveTasksWithUpcomingDueDate(@Param("dueDate") Date dueDate);
+
+    @Query("SELECT t FROM Task t WHERE t.type = 'REPETITIVE' AND t.status = 'COMPLETED' AND t.nextRepetitionDate <= :currentDate")
+    List<Task> findCompletedRepetitiveTasksReadyForNextCycle(@Param("currentDate") Date currentDate);
 
 }

@@ -65,11 +65,11 @@ public class SecurityConfig {
         http.authorizeHttpRequests().requestMatchers("/assert/confirm/**").hasAnyAuthority(ROLE_AUTH.CONFIRM_ASSET.name());
         http.authorizeHttpRequests().requestMatchers("/assert/movable/**").authenticated();
 
-        http.authorizeHttpRequests().requestMatchers("/laptop/**").permitAll();
+        http.authorizeHttpRequests().requestMatchers("/laptop/**").authenticated();
         http.authorizeHttpRequests().requestMatchers("/antivirus/**").permitAll();
         http.authorizeHttpRequests().requestMatchers("/assert/allaserts/**").authenticated();
-
-
+http.authorizeHttpRequests().requestMatchers("/ITAsserthttp/**");
+        http.authorizeHttpRequests().requestMatchers("/antivirus/**").permitAll();
 
 
         http.exceptionHandling().accessDeniedHandler(customAccessDeniedHandler).authenticationEntryPoint(customAuthenticationEntryPoint);

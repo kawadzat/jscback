@@ -5,6 +5,8 @@ import io.getarrays.securecapita.domain.User;
 import io.getarrays.securecapita.itauditing.Auditable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.Date;
@@ -38,6 +40,12 @@ public class Task extends Auditable<String> {
 
     private Date dueDate;
 
+
+    @NotBlank(message = "department is required")
+    @Size(max = 100, message = "department name must not exceed 100 characters")
+    @Column(name = "department", length = 100, nullable = false)
+    private String department;
+
     @Column
     @Enumerated(EnumType.STRING)
     @Nonnull
@@ -46,7 +54,22 @@ public class Task extends Auditable<String> {
     @Column
     @Enumerated(EnumType.STRING)
     @Nonnull
+    private TaskTypeEnum type;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    @Nonnull
     private TaskStatusEnum status;
+
+    @Column(name = "time_interval_value")
+    private Integer timeIntervalValue;
+
+    @Column(name = "time_interval_unit")
+    @Enumerated(EnumType.STRING)
+    private TimeIntervalUnit timeIntervalUnit;
+
+    @Column(name = "next_repetition_date")
+    private Date nextRepetitionDate;
 
     @ManyToOne
     @JoinColumn(name = "initiated_user_id", nullable = false)

@@ -58,17 +58,10 @@ public class Antivirus extends Auditable<String> {
     @Column(name = "days_to_expiration")
     private Long daysToExpiration;
 
+    // Relationship with Laptop
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "laptop_id")
     @JsonBackReference
     private Laptop laptop;
 
-    public long getDaysToExpiration() {
-        if (licenseExpirationDate == null) return -1;
-        return java.time.Duration.between(
-            java.time.LocalDateTime.now(),
-            licenseExpirationDate
-        ).toDays();
-    }
-
-} 
+}

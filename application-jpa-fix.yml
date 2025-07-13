@@ -1,0 +1,25 @@
+# Temporary JPA configuration to force table recreation
+# Use this configuration temporarily to fix the maintenance table
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # This will drop and recreate all tables
+    show-sql: true  # Enable SQL logging to see what's happening
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: UTC
+        # Force JPA to use our column definitions
+        globally_quoted_identifiers: true
+        # Ensure proper table creation
+        hbm2ddl:
+          auto: create-drop
+          import_files: 
+          import_files_sql_extractor: org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor
+
+# After running with this config, change back to:
+# ddl-auto: update
+# show-sql: false 
