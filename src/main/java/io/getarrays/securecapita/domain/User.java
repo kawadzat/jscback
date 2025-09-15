@@ -64,6 +64,10 @@ public class User {
     private boolean isNotLocked = true;
     private boolean isUsingMfa;
     private LocalDateTime createdAt;
+    
+    @Column(name = "password_last_changed")
+    private LocalDateTime passwordLastChanged;
+
     @JsonIgnore
     private Timestamp verificationTokenExpiry;
     @JsonIgnore
@@ -114,6 +118,37 @@ public class User {
     public boolean isStationAssigned() {
         Hibernate.initialize(getStations());
         return !stations.isEmpty();
+    }
+
+    /**
+     * Check if password has expired (90 days)
+     */
+    public boolean isPasswordExpired() {
+        if (passwordLastChanged == null) {
+            return true; // If never set, consider expired
+        }
+        return passwordLastChanged.plusDays(90).isBefore(LocalDateTime.now());
+    }
+
+    /**
+     * Get days until password expires
+     */
+    public long getDaysUntilPasswordExpires() {
+        if (passwordLastChanged == null) {
+            return 0; // Already expired
+        }
+        LocalDateTime expiryDate = passwordLastChanged.plusDays(90);
+        return java.time.Duration.between(LocalDateTime.now(), expiryDate).toDays();
+    }
+
+    /**
+     * Check if password expires within specified days
+     */
+    public boolean isPasswordExpiringWithin(int days) {
+        if (passwordLastChanged == null) {
+            return true; // Already expired
+        }
+        return getDaysUntilPasswordExpires() <= days;
     }
 
     //laptops

@@ -1,34 +1,30 @@
 package io.getarrays.securecapita.antivirus;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import io.getarrays.securecapita.itauditing.Auditable;
 import io.getarrays.securecapita.itinventory.Laptop;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 
-@Entity
-@Table(name ="antivirus")
-@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-@ToString
-@EqualsAndHashCode
 @AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @JsonInclude(NON_DEFAULT)
-public class Antivirus extends Auditable<String> {
+@Builder
+@Entity
+@NoArgsConstructor
 
+@Table(name = "`antivirus`")
+public class Antivirus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+
 
     @Column(nullable = false)
     private String name;
@@ -55,13 +51,16 @@ public class Antivirus extends Auditable<String> {
     @Column(name = "license_expiration_date")
     private LocalDateTime licenseExpirationDate;
 
+    @Column(name = "last_scan_date")
+    private LocalDateTime lastScanDate;
+
     @Column(name = "days_to_expiration")
     private Long daysToExpiration;
 
     // Relationship with Laptop
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "laptop_id")
-    @JsonBackReference
+    @JsonIgnore
     private Laptop laptop;
 
 }

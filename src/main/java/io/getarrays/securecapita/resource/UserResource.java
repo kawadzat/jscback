@@ -17,6 +17,7 @@ import io.getarrays.securecapita.service.EventService;
 import io.getarrays.securecapita.service.RoleService;
 import io.getarrays.securecapita.service.UserService;
 import io.getarrays.securecapita.service.implementation.UserService1;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -70,6 +71,7 @@ public class UserResource {
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final ApplicationEventPublisher publisher;
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginForm loginForm) {
@@ -248,6 +250,43 @@ public class UserResource {
                         .build());
     }
 
+    @GetMapping("/password/expiration-status")
+    public ResponseEntity<HttpResponse> getPasswordExpirationStatus(Authentication authentication) {
+        UserDTO userDTO = getAuthenticatedUser(authentication);
+        User user = userService.getUserEntityById(userDTO.getId());
+        
+        boolean isExpired = user.isPasswordExpired();
+        long daysUntilExpiry = user.getDaysUntilPasswordExpires();
+        boolean isExpiringSoon = user.isPasswordExpiringWithin(7); // 7 days warning
+        
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(of(
+                            "isExpired", isExpired,
+                            "daysUntilExpiry", daysUntilExpiry,
+                            "isExpiringSoon", isExpiringSoon,
+                            "passwordLastChanged", user.getPasswordLastChanged(),
+                            "expiryDate", user.getPasswordLastChanged() != null ? user.getPasswordLastChanged().plusDays(90) : null
+                        ))
+                        .message(isExpired ? "Password has expired" : isExpiringSoon ? "Password expires soon" : "Password is valid")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+    @GetMapping("/password/expiring-users")
+    public ResponseEntity<HttpResponse> getUsersWithExpiringPasswords(@RequestParam(defaultValue = "7") int days) {
+        // This would require a new service method to find users with expiring passwords
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .message("Feature to be implemented - get users with expiring passwords within " + days + " days")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
     @PatchMapping("/update/role/{roleName}")
     public ResponseEntity<HttpResponse> updateUserRole(Authentication authentication, @PathVariable("roleName") String roleName) {
         UserDTO userDTO = getAuthenticatedUser(authentication);
@@ -327,6 +366,8 @@ public class UserResource {
                         .statusCode(OK.value())
                         .build());
     }
+    
+
 
 
 //    @GetMapping("/verify/password/{key}")

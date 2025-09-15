@@ -30,6 +30,7 @@ public class UserRowMapper implements RowMapper<User> {
                 .isUsingMfa(resultSet.getBoolean("is_using_mfa"))
                 .isNotLocked(resultSet.getBoolean("non_locked"))
                 .createdAt(resultSet.getTimestamp("created_at").toLocalDateTime())
+
                 .build();
 
     }

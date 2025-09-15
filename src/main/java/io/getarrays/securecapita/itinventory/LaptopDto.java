@@ -10,6 +10,7 @@ import io.getarrays.securecapita.maintenance.MaintenanceDto;
 import io.getarrays.securecapita.maintenance.Maintenance;
 import io.getarrays.securecapita.maintenance.MaintenanceStatus;
 import io.getarrays.securecapita.maintenance.MaintenanceType;
+import io.getarrays.securecapita.itinventory.validation.LaptopConditionalValidation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import io.getarrays.securecapita.dto.UserDTO;
 
 /**
  * Data Transfer Object for Laptop entity
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@LaptopConditionalValidation
 public class LaptopDto {
     @Builder.Default
     @JsonSetter(nulls = Nulls.AS_EMPTY)
@@ -39,60 +43,60 @@ public class LaptopDto {
 
     @Builder.Default
     @JsonSetter(nulls = Nulls.AS_EMPTY)
-    private List<AntivirusDto> antivirusList = new ArrayList<>();
+   private List<AntivirusDto> antivirusList = new ArrayList<>();
     private Long id;
-    @NotNull(message = "Purchase date is required")
+    
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date purchaseDate;
-    @NotBlank(message = "Manufacturer is required")
+    
     private String manufacturer;
 
-    @NotBlank(message = "Serial number is required")
+    private String assertType;
+
     private String serialNumber;
 
-
-    @NotNull(message = "RAM is required")
+    // Laptop-specific fields - only required if asset type is LAPTOP
     @Min(value = 1, message = "RAM must be at least 1 GB")
     private Integer ram;
 
-    @NotNull(message = "Processor is required")
     @Min(value = 1, message = "Processor value must be positive")
     private Integer processor;
 
-    @NotNull(message = "Issue date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date issueDate;
 
-    @NotNull(message = "Status is required")
     private LaptopStatus status;
 
-    @NotBlank(message = "IssuedTo is required")
     private String issuedTo;
 
-    @NotBlank(message = "station is required")
     @Size(max = 100, message = "station name must not exceed 100 characters")
     private String station;
 
-    @NotBlank(message = "department is required")
     @Size(max = 100, message = "department name must not exceed 100 characters")
-    @Column(name = "department", length = 100, nullable = false)
     private String department;
 
-
-    @NotBlank(message = "designation is required")
     @Size(max = 100, message = "department name must not exceed 100 characters")
-    @Column(name = "designation", length = 100, nullable = false)
     private String designation;
-    @NotBlank(message = "Email is required")
+    
     @Email(message = "Email should be valid")
     private String email;
 
-    @NotNull(message = "Replacement date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date replacementDate;
 
     private String issueByEmail;
+
+    private String notes;
+
+    private UserDTO acknowledgedBy;
+    private LocalDate acknowledgmentDate;
+    private String signature;
+
+    // Custom validation method
+    public boolean isLaptopSpecificFieldsRequired() {
+        return "LAPTOP".equalsIgnoreCase(assertType);
+    }
 
     public void setMaintenanceList(List<MaintenanceDto> maintenanceList) {
         this.maintenanceList = maintenanceList;

@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -37,26 +38,86 @@ public class LaptopService {
 
     public LaptopDto createLaptop(UserDTO currentUser, LaptopDto laptopDto) {
         validateDates(laptopDto);
+        validateLaptopSpecificFields(laptopDto);
         Laptop laptopEntity = dtoToEntity(currentUser, null, laptopDto); // Map DTO to entity
         Laptop savedLaptop = laptopRepository.save(laptopEntity);        // Save entity
         return entityToDto(savedLaptop);                                 // Map back to DTO
     }
 
     private void validateDates(LaptopDto dto) {
-        if (dto.getPurchaseDate() == null || dto.getPurchaseDate().getTime() == 0) {
-            throw new IllegalArgumentException("Purchase date cannot be null or zero");
+        // Only validate purchase date for LAPTOP assets
+        if (dto.isLaptopSpecificFieldsRequired()) {
+            if (dto.getPurchaseDate() == null || dto.getPurchaseDate().getTime() == 0) {
+                throw new IllegalArgumentException("Purchase date cannot be null or zero for LAPTOP assets");
+            }
         }
-        if (dto.getIssueDate() == null || dto.getIssueDate().getTime() == 0) {
-            throw new IllegalArgumentException("Issue date cannot be null or zero");
+        
+        // Only validate issue date for LAPTOP assets
+        if (dto.isLaptopSpecificFieldsRequired()) {
+            if (dto.getIssueDate() == null || dto.getIssueDate().getTime() == 0) {
+                throw new IllegalArgumentException("Issue date cannot be null or zero for LAPTOP assets");
+            }
         }
-        if (dto.getReplacementDate() == null || dto.getReplacementDate().getTime() == 0) {
-            throw new IllegalArgumentException("Replacement date cannot be null or zero");
+        
+        // Only validate replacement date for LAPTOP assets
+        if (dto.isLaptopSpecificFieldsRequired()) {
+            if (dto.getReplacementDate() == null || dto.getReplacementDate().getTime() == 0) {
+                throw new IllegalArgumentException("Replacement date cannot be null or zero for LAPTOP assets");
+            }
         }
+    }
+
+    private void validateLaptopSpecificFields(LaptopDto dto) {
+        // If asset type is LAPTOP, validate all required fields
+        if (dto.isLaptopSpecificFieldsRequired()) {
+            if (dto.getPurchaseDate() == null) {
+                throw new IllegalArgumentException("Purchase date is required for laptop assets");
+            }
+            if (dto.getManufacturer() == null || dto.getManufacturer().trim().isEmpty()) {
+                throw new IllegalArgumentException("Manufacturer is required for laptop assets");
+            }
+            if (dto.getSerialNumber() == null || dto.getSerialNumber().trim().isEmpty()) {
+                throw new IllegalArgumentException("Serial number is required for laptop assets");
+            }
+            if (dto.getRam() == null) {
+                throw new IllegalArgumentException("RAM is required for laptop assets");
+            }
+            if (dto.getProcessor() == null) {
+                throw new IllegalArgumentException("Processor is required for laptop assets");
+            }
+            if (dto.getIssueDate() == null) {
+                throw new IllegalArgumentException("Issue date is required for laptop assets");
+            }
+            if (dto.getStatus() == null) {
+                throw new IllegalArgumentException("Status is required for laptop assets");
+            }
+            // if (dto.getIssuedTo() == null || dto.getIssuedTo().trim().isEmpty()) {
+            //     throw new IllegalArgumentException("IssuedTo is required for laptop assets");
+            // }
+            // if (dto.getStation() == null || dto.getStation().trim().isEmpty()) {
+            //     throw new IllegalArgumentException("Station is required for laptop assets");
+            // }
+            // if (dto.getDepartment() == null || dto.getDepartment().trim().isEmpty()) {
+            //     throw new IllegalArgumentException("Department is required for laptop assets");
+            // }
+            // if (dto.getDesignation() == null || dto.getDesignation().trim().isEmpty()) {
+            //     throw new IllegalArgumentException("Designation is required for laptop assets");
+            // }
+            // if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            //     throw new IllegalArgumentException("Email is required for laptop assets");
+            // }
+            if (dto.getReplacementDate() == null) {
+                throw new IllegalArgumentException("Replacement date is required for laptop assets");
+            }
+        }
+        // For non-laptop assets, all fields are optional
     }
 
     public LaptopDto changeLaptopStatus(UserDTO currentUser, Long laptopId, LaptopStatus newStatus) {
         Laptop laptop = laptopRepository.findById(laptopId)
                 .orElseThrow(() -> new ResourceNotFoundException("Laptop not found with id: " + laptopId));
+        
+        String previousStatus = laptop.getStatus().toString();
         
         // If changing to ISSUED status, automatically create pending acknowledgment
         if (newStatus == LaptopStatus.ISSUED) {
@@ -67,11 +128,16 @@ public class LaptopService {
             // Create automatic acknowledgment entry
             createAutomaticAcknowledgment(currentUser, savedLaptop);
             
+
+            
             return entityToDto(savedLaptop);
         } else {
             // For other status changes, proceed normally
             laptop.setStatus(newStatus);
             Laptop updatedLaptop = laptopRepository.save(laptop);
+            
+
+            
             return entityToDto(updatedLaptop);
         }
     }
@@ -108,6 +174,7 @@ public class LaptopService {
         // Map basic fields
         laptop.setPurchaseDate(dto.getPurchaseDate());
         laptop.setManufacturer(dto.getManufacturer());
+        laptop.setAssertType(dto.getAssertType());
         laptop.setSerialNumber(dto.getSerialNumber());
 
         laptop.setRam(dto.getRam());
@@ -130,6 +197,7 @@ public class LaptopService {
                 .id(entity.getId())
                 .purchaseDate(entity.getPurchaseDate())
                 .manufacturer(entity.getManufacturer())
+                .assertType(entity.getAssertType())
                 .serialNumber(entity.getSerialNumber())
                 .ram(entity.getRam())
                 .processor(entity.getProcessor())
@@ -151,6 +219,14 @@ public class LaptopService {
                     .map(this::maintenanceEntityToDto)
                     .collect(Collectors.toList())
             );
+        }
+
+        // Map acknowledgment info
+        LaptopAcknowledgment acknowledgment = laptopAcknowledgmentRepository.findByLaptopId(entity.getId()).orElse(null);
+        if (acknowledgment != null) {
+            dto.setAcknowledgedBy(io.getarrays.securecapita.dto.UserDTO.toDto(acknowledgment.getAcknowledgedBy()));
+            dto.setAcknowledgmentDate(LocalDate.from(acknowledgment.getAcknowledgmentDate()));
+            dto.setSignature(acknowledgment.getSignature());
         }
 
         return dto;
@@ -351,6 +427,8 @@ public class LaptopService {
             throw new IllegalArgumentException("Laptop is not in pending acknowledgment status");
         }
         
+
+        
         // Check if current user is authorized for this station
         User user = userRepository1.findById(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -388,7 +466,9 @@ public class LaptopService {
         
         // Update laptop status to ISSUED
         laptop.setStatus(LaptopStatus.ISSUED);
-        laptopRepository.save(laptop);
+        Laptop updatedLaptop = laptopRepository.save(laptop);
+        
+
         
         return acknowledgmentToDto(savedAcknowledgment);
     }
@@ -406,18 +486,22 @@ public class LaptopService {
             throw new IllegalArgumentException("Laptop is not in pending acknowledgment status");
         }
         
+
+        
         // Check if current user is authorized for this station
         User user = userRepository1.findById(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
-        if (!user.isStationAssigned() || !user.getStations().stream()
-                .anyMatch(userStation -> userStation.getStation().getStationName().equals(laptop.getStation()))) {
-            throw new NotAuthorizedException("You are not authorized to acknowledge laptops for this station");
-        }
+
+        // (Removed station assignment check here)
         
         // Update the existing acknowledgment with manual acknowledgment details
         LaptopAcknowledgment existingAcknowledgment = laptopAcknowledgmentRepository.findByLaptopId(laptopId)
-                .orElseThrow(() -> new ResourceNotFoundException("No acknowledgment found for laptop: " + laptopId));
+                .orElse(null);
+
+        if (existingAcknowledgment == null) {
+            existingAcknowledgment = new LaptopAcknowledgment();
+            existingAcknowledgment.setLaptop(laptop);
+        }
         
         // Update acknowledgment with manual acknowledgment details
         existingAcknowledgment.setNotes(acknowledgmentNotes != null ? acknowledgmentNotes : "Manually acknowledged by station admin");
@@ -430,6 +514,8 @@ public class LaptopService {
         // Update laptop status to ISSUED
         laptop.setStatus(LaptopStatus.ISSUED);
         Laptop updatedLaptop = laptopRepository.save(laptop);
+        
+
         
         return entityToDto(updatedLaptop);
     }
@@ -507,6 +593,8 @@ public class LaptopService {
             throw new IllegalArgumentException("Laptop is not in PENDING_ACKNOWLEDGMENT status");
         }
 
+
+
         // Create acknowledgment record
         User user = userRepository1.findById(acknowledger.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -549,20 +637,20 @@ public class LaptopService {
         String subject = "Laptop Issued to You";
         String issuerName = currentUser.getFirstName() + " " + currentUser.getLastName();
         String issuerEmail = currentUser.getEmail();
-        String confirmUrl = "https://yourdomain.com/laptop/acknowledge?laptopId=" + savedLaptop.getId();
         String message = String.format(
             "Dear %s,<br><br>" +
-            "A laptop from <b>%s</b> (Serial Number: %s) has been issued to you by <b>%s</b> (%s). Please acknowledge receipt.<br><br>" +
-            "<a href=\"%s\" style=\"display:inline-block;padding:10px 20px;background-color:#4CAF50;color:#fff;text-decoration:none;border-radius:5px;\">Confirm Receipt</a><br><br>" +
+            "A laptop from <b>%s</b> (Serial Number: %s) has been issued to you by <b>%s</b> (%s).<br><br>" +
             "Thank you.",
             savedLaptop.getIssuedTo(),
             savedLaptop.getManufacturer(),
             savedLaptop.getSerialNumber(),
             issuerName,
-            issuerEmail,
-            confirmUrl
+            issuerEmail
         );
         emailService.sendEmail(recipientEmail, subject, message);
+        
+
+        
         return entityToDto(savedLaptop);
     }
 
@@ -583,9 +671,55 @@ public class LaptopService {
                 .collect(Collectors.toList());
     }
 
+    public List<LaptopDto> getAllAcknowledgedByStation(String stationName) {
+        List<Laptop> acknowledgedLaptops = laptopRepository.findByStatusAndStation(LaptopStatus.ISSUED, stationName);
+        return acknowledgedLaptops.stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+    }
+
     public List<LaptopDto> getLaptopsByStatus(LaptopStatus status) {
         List<Laptop> laptops = laptopRepository.findByStatus(status);
         return laptops.stream().map(this::entityToDto).collect(Collectors.toList());
+    }
+    
+    public List<LaptopDto> getLaptopsByStation(String station) {
+        List<Laptop> laptops = laptopRepository.findByStation(station);
+        return laptops.stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+    }
+
+    // Get laptops in acknowledgment state (PENDING_ACKNOWLEDGMENT status) with notes
+    public List<LaptopDto> getLaptopsInAcknowledgmentState(UserDTO currentUser) {
+        List<Laptop> acknowledgmentLaptops = laptopRepository.findByStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+        return acknowledgmentLaptops.stream()
+                .map(laptop -> {
+                    LaptopDto dto = entityToDto(laptop);
+                    // Get acknowledgment notes if available
+                    LaptopAcknowledgment acknowledgment = laptopAcknowledgmentRepository.findByLaptopId(laptop.getId()).orElse(null);
+                    if (acknowledgment != null) {
+                        dto.setNotes(acknowledgment.getNotes());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // Get laptops pending acknowledgment (overloaded method without station parameter) with notes
+    public List<LaptopDto> getLaptopsPendingAcknowledgment(UserDTO currentUser) {
+        List<Laptop> pendingLaptops = laptopRepository.findByStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+        return pendingLaptops.stream()
+                .map(laptop -> {
+                    LaptopDto dto = entityToDto(laptop);
+                    // Get acknowledgment notes if available
+                    LaptopAcknowledgment acknowledgment = laptopAcknowledgmentRepository.findByLaptopId(laptop.getId()).orElse(null);
+                    if (acknowledgment != null) {
+                        dto.setNotes(acknowledgment.getNotes());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
 

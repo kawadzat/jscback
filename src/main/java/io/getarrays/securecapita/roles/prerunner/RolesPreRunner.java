@@ -167,6 +167,50 @@ public class RolesPreRunner implements CommandLineRunner {
 
 
 
+
+        String permissionIT_TECHNICIAN = ROLE_AUTH.READ_USER + "," +
+                ROLE_AUTH.UPDATE_USER + "," +
+                ROLE_AUTH.VIEW_ASSET + "," +
+
+
+                ROLE_AUTH.CREATE_PRODUCT + "," +
+
+                ROLE_AUTH.CREATE_ASSET;
+        updateRole(roles, AUTH_ROLE.IT_TECHNICIAN, permissionIT_TECHNICIAN);
+
+
+
+
+
+
+
+
+
+
+
+
+        String permissionDATA_PROTECTION = ROLE_AUTH.READ_USER + "," +
+                ROLE_AUTH.UPDATE_USER + "," +
+                ROLE_AUTH.VIEW_ASSET + "," +
+
+
+                ROLE_AUTH.CREATE_PRODUCT + "," +
+
+                ROLE_AUTH.CREATE_ASSET;
+        updateRole(roles, AUTH_ROLE.DATA_PROTECTION, permissionDATA_PROTECTION);
+
+
+
+
+
+
+
+
+
+
+
+
+
         String permissionAuditor = ROLE_AUTH.READ_USER + "," +
 
                 ROLE_AUTH.VIEW_ASSET + "," +
@@ -224,6 +268,14 @@ public class RolesPreRunner implements CommandLineRunner {
                 ROLE_AUTH.VIEW_STATION;
         updateRole(roles, AUTH_ROLE.REGISTRAR, permissionRegistrar);
         updateRole(roles, AUTH_ROLE.DEPUTY_REGISTRAR, permissionRegistrar);
+
+        String permissionITTechnician = ROLE_AUTH.READ_USER + "," +
+                ROLE_AUTH.VIEW_ASSET + "," +
+                ROLE_AUTH.VIEW_STATION + "," +
+                ROLE_AUTH.REQUEST_MOVE_ASSET;
+        updateRole(roles, AUTH_ROLE.IT_TECHNICIAN, permissionITTechnician);
+
+
     }
 
     //update role

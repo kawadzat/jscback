@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.Map;
+import io.getarrays.securecapita.antivirus.AntivirusRepository;
+import io.getarrays.securecapita.itinventory.LaptopRepository;
+import io.getarrays.securecapita.itinventory.LaptopStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/laptop-counts")
@@ -20,6 +24,11 @@ public class LaptopCountController {
 
     private final LaptopCountService laptopCountService;
 
+    @Autowired
+    private AntivirusRepository antivirusRepository;
+    @Autowired
+    private LaptopRepository laptopRepository;
+
     /**
      * Get total count of all laptops
      */
@@ -27,6 +36,17 @@ public class LaptopCountController {
     public ResponseEntity<Map<String, Long>> getTotalCount() {
         long count = laptopCountService.getTotalCount();
         return ResponseEntity.ok(Map.of("totalLaptops", count));
+    }
+
+    /**
+     * Get total count of all laptops
+     */
+    @GetMapping("/total-laptops")
+    public ResponseEntity<Map<String, Long>> getTotalLaptops() {
+        long totalLaptops = laptopRepository.count();
+        Map<String, Long> result = new java.util.HashMap<>();
+        result.put("totalLaptops", totalLaptops);
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -325,5 +345,31 @@ public class LaptopCountController {
     public ResponseEntity<Map<String, Object>> getComprehensiveStats() {
         Map<String, Object> stats = laptopCountService.getComprehensiveStats();
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Get total antivirus, issued laptops count, and available laptops count
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<Map<String, Long>> getSummaryCounts() {
+        long totalAntivirus = antivirusRepository.count();
+        long issuedLaptopsCount = laptopRepository.countByStatus(LaptopStatus.ISSUED);
+        long availableLaptopsCount = laptopRepository.countByStatus(LaptopStatus.AVAILABLE);
+        Map<String, Long> result = new java.util.HashMap<>();
+        result.put("totalAntivirus", totalAntivirus);
+        result.put("issuedLaptopsCount", issuedLaptopsCount);
+        result.put("availableLaptopsCount", availableLaptopsCount);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Get total antivirus count only
+     */
+    @GetMapping("/total-antivirus")
+    public ResponseEntity<Map<String, Long>> getTotalAntivirus() {
+        long totalAntivirus = antivirusRepository.count();
+        Map<String, Long> result = new java.util.HashMap<>();
+        result.put("totalAntivirus", totalAntivirus);
+        return ResponseEntity.ok(result);
     }
 } 

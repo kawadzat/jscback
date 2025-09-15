@@ -39,7 +39,7 @@ public class LaptopAcknowledgment extends Auditable<String> {
     @Column(name = "acknowledgment_date", nullable = false)
     private LocalDateTime acknowledgmentDate;
 
-    @Column(name = "notes", length = 500)
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     @Column(name = "signature", columnDefinition = "longtext")

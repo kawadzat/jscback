@@ -14,6 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import io.getarrays.securecapita.service.EmailService;
+import org.springframework.beans.factory.annotation.Autowired;
+import io.getarrays.securecapita.repository.implementation.UserRepository1;
+import io.getarrays.securecapita.domain.User;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +28,10 @@ public class AntivirusServiceImpl implements AntivirusService {
     private final AntivirusRepository antivirusRepository;
     private final LaptopRepository laptopRepository;
     private final MaintenanceRepository maintenanceRepository;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private UserRepository1 userRepository1;
 
     @Override
     public Antivirus addAntivirusToLaptop(Long laptopId, Antivirus antivirus) {
@@ -133,6 +142,7 @@ public class AntivirusServiceImpl implements AntivirusService {
         existingAntivirus.setStatus(antivirus.getStatus());
         existingAntivirus.setIsInstalled(antivirus.getIsInstalled());
         existingAntivirus.setLicenseExpirationDate(antivirus.getLicenseExpirationDate());
+
         
         return antivirusRepository.save(existingAntivirus);
     }
@@ -230,6 +240,7 @@ public class AntivirusServiceImpl implements AntivirusService {
         existingAntivirus.setStatus(antivirus.getStatus());
         existingAntivirus.setIsInstalled(antivirus.getIsInstalled());
         existingAntivirus.setLicenseExpirationDate(antivirus.getLicenseExpirationDate());
+
         
         return antivirusRepository.save(existingAntivirus);
     }
@@ -267,7 +278,11 @@ public class AntivirusServiceImpl implements AntivirusService {
                 .status(antivirus.getStatus())
                 .isInstalled(antivirus.getIsInstalled())
                 .licenseExpirationDate(antivirus.getLicenseExpirationDate())
+                .lastScanDate(antivirus.getLastScanDate())
                 .daysToExpiration(antivirus.getDaysToExpiration())
+                .laptopId(antivirus.getLaptop() != null ? antivirus.getLaptop().getId() : null)
+                .laptopSerialNumber(antivirus.getLaptop() != null ? antivirus.getLaptop().getSerialNumber() : null)
+                .laptopUser(antivirus.getLaptop() != null ? antivirus.getLaptop().getIssuedTo() : null)
                 .build();
     }
     
@@ -277,5 +292,47 @@ public class AntivirusServiceImpl implements AntivirusService {
         return antivirusList.stream()
                 .map(this::convertToDto)
                 .collect(java.util.stream.Collectors.toList());
+    }
+    
+    // Get antivirus by laptop serial number
+    public List<Antivirus> getByLaptopSerialNumber(String serialNumber) {
+        return antivirusRepository.findByLaptopSerialNumber(serialNumber);
+    }
+    
+    // Get antivirus DTOs by laptop serial number
+    public List<AntivirusDto> getAntivirusDtosByLaptopSerialNumber(String serialNumber) {
+        List<Antivirus> antivirusList = getByLaptopSerialNumber(serialNumber);
+        return antivirusList.stream()
+                .map(this::convertToDto)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Notify the Data Protection Officer (DPO) by email if there are expired antivirus licenses.
+     * This method runs automatically every day at 8 AM.
+     */
+    @Scheduled(cron = "0 0 8 * * *") // Every day at 8 AM
+    public void notifyDpoOfExpiredAntivirus() {
+        List<Antivirus> expired = antivirusRepository.findAll().stream()
+            .filter(a -> a.getLicenseExpirationDate() != null && java.time.LocalDateTime.now().isAfter(a.getLicenseExpirationDate()))
+            .toList();
+
+        // Fetch DPO email dynamically
+        String dpoEmail = userRepository1.findByRoleName("DATA_PROTECTION")
+            .stream()
+            .findFirst()
+            .map(User::getEmail)
+            .orElse(null);
+
+        if (dpoEmail != null && !expired.isEmpty()) {
+            StringBuilder sb = new StringBuilder("The following antivirus licenses have expired:\n\n");
+            for (Antivirus av : expired) {
+                sb.append("Antivirus: ").append(av.getName())
+                  .append(", Key: ").append(av.getKey())
+                  .append(", Expired on: ").append(av.getLicenseExpirationDate())
+                  .append("\n");
+            }
+            emailService.sendEmail(dpoEmail, "Expired Antivirus Licenses", sb.toString());
+        }
     }
 }

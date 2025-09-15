@@ -37,4 +37,8 @@ public interface AntivirusService {
     // DTO conversion methods
     AntivirusDto convertToDto(Antivirus antivirus);
     List<AntivirusDto> getAntivirusDtosByLaptop(Long laptopId);
+    
+    // Search by laptop serial number
+    List<Antivirus> getByLaptopSerialNumber(String serialNumber);
+    List<AntivirusDto> getAntivirusDtosByLaptopSerialNumber(String serialNumber);
 }

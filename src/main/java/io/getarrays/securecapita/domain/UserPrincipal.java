@@ -54,7 +54,7 @@ public class UserPrincipal implements UserDetails {
     //that can be removed, was trying to figure out how to make it,jpa vs jdbc
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return !this.user.isPasswordExpired();
     }
 
     @Override

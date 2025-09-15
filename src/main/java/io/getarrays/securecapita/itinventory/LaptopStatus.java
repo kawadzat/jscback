@@ -6,5 +6,8 @@ public enum LaptopStatus {
     PENDING_ACKNOWLEDGMENT,  // Waiting for acknowledgment after issue
     ISSUED,                  // Fully issued and acknowledged
     MAINTENANCE,
-    RETIRED
+    RETIRED,
+    ACTIVE,                  // Laptop is active
+    INACTIVE                 // Laptop is inactive
+    
 }

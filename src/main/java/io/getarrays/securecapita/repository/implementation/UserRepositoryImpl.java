@@ -324,7 +324,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
     public void renewPassword(String key, String password, String confirmPassword) {
         if(!password.equals(confirmPassword)) throw new ApiException("Passwords don't match. Please try again.");
         try {
-            jdbc.update(UPDATE_USER_PASSWORD_BY_URL_QUERY, of("password", encoder.encode(password), "url", getVerificationUrl(key, PASSWORD.getType())));
+            jdbc.update(UPDATE_USER_PASSWORD_BY_URL_QUERY, of("password", encoder.encode(password), "passwordLastChanged", java.time.LocalDateTime.now(), "url", getVerificationUrl(key, PASSWORD.getType())));
             jdbc.update(DELETE_VERIFICATION_BY_URL_QUERY, of("url", getVerificationUrl(key, PASSWORD.getType())));
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -365,7 +365,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         User user = get(id);
         if(encoder.matches(currentPassword, user.getPassword())) {
             try {
-                jdbc.update(UPDATE_USER_PASSWORD_BY_ID_QUERY, of("userId", id, "password", encoder.encode(newPassword)));
+                jdbc.update(UPDATE_USER_PASSWORD_BY_ID_QUERY, of("userId", id, "password", encoder.encode(newPassword), "passwordLastChanged", java.time.LocalDateTime.now()));
             }  catch (Exception exception) {
                 throw new ApiException("An error occurred. Please try again.");
             }

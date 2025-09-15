@@ -15,6 +15,8 @@ public interface LaptopRepository extends JpaRepository<Laptop, Long> {
     List<Laptop> findByStatus(LaptopStatus status);
     
     List<Laptop> findByStatusAndStation(LaptopStatus status, String station);
+    
+    List<Laptop> findByStation(String station);
 
     @Query("SELECT COUNT(l) FROM Laptop l WHERE l.status = :status")
     long countByStatus(@Param("status")   LaptopStatus status);
@@ -122,4 +124,7 @@ public interface LaptopRepository extends JpaRepository<Laptop, Long> {
     long countByReplacementDateRange(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
     Optional<Laptop> findBySerialNumber(String serialNumber);
+
+    class Licence {
+    }
 }

@@ -46,7 +46,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {"/api/v1/jasper/pdf/asset","/user/verify/password/**","/user/reset/password",
             "/user/login/**", "/user/verify/code/**", "/user/register/**", "/user/resetpassword/**", "/user/verify/account/**",
-            "/user/refresh/token/**","/api/v1/user/station/get", "/api/v1/user/station/getCount", "/StockItemRequest", "/user/image/**", "user/list/**", "io/getarrays/securecapita/assert/**", "newvehicle/**", "inspection/**", "inventory/**", "/purchaseRequisition/**", "/store/**", "/inspection/addtoassert/**", "product/**", "category/**", "stock/totalQuantity/**", "users/{userId}/**"};
+            "/user/refresh/token/**","/api/v1/user/station/get", "/api/v1/user/station/getCount", "/StockItemRequest", "/user/image/**", "user/list/**", "io/getarrays/securecapita/assert/**", "newvehicle/**", "inspection/**", "inventory/**", "/purchaseRequisition/**", "/store/**", "/inspection/addtoassert/**", "product/**", "category/**", "stock/totalQuantity/**", "users/{userId}/**", "/licence/**"};
 
 
     @Bean
@@ -65,11 +65,14 @@ public class SecurityConfig {
         http.authorizeHttpRequests().requestMatchers("/assert/confirm/**").hasAnyAuthority(ROLE_AUTH.CONFIRM_ASSET.name());
         http.authorizeHttpRequests().requestMatchers("/assert/movable/**").authenticated();
 
-        http.authorizeHttpRequests().requestMatchers("/laptop/**").authenticated();
-        http.authorizeHttpRequests().requestMatchers("/antivirus/**").permitAll();
+     //   http.authorizeHttpRequests().requestMatchers("/laptop/**").authenticated();
+      //http.authorizeHttpRequests().requestMatchers("/antivirus/**").authenticated();
         http.authorizeHttpRequests().requestMatchers("/assert/allaserts/**").authenticated();
-http.authorizeHttpRequests().requestMatchers("/ITAsserthttp/**");
-        http.authorizeHttpRequests().requestMatchers("/antivirus/**").permitAll();
+        http.authorizeHttpRequests().requestMatchers("/licence/**").authenticated();
+        http.authorizeHttpRequests().requestMatchers("/lines/**").authenticated();
+        http.authorizeHttpRequests().requestMatchers("/sslcertificate/**").authenticated();
+
+       // http.authorizeHttpRequests().requestMatchers("/antivirus/**").permitAll();
 
 
         http.exceptionHandling().accessDeniedHandler(customAccessDeniedHandler).authenticationEntryPoint(customAuthenticationEntryPoint);

@@ -42,4 +42,8 @@ public interface AntivirusRepository extends JpaRepository<Antivirus, Long> {
     // Find expiring licenses
     @Query("SELECT a FROM Antivirus a WHERE a.licenseExpirationDate <= :date")
     List<Antivirus> findExpiringLicenses(@Param("date") LocalDateTime date);
+    
+    // Find antivirus by laptop serial number
+    @Query("SELECT a FROM Antivirus a WHERE a.laptop.serialNumber = :serialNumber")
+    List<Antivirus> findByLaptopSerialNumber(@Param("serialNumber") String serialNumber);
 } 

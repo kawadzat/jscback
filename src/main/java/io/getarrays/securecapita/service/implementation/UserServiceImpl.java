@@ -209,6 +209,13 @@ public class UserServiceImpl implements UserService {
         return mapToUserDTO(user);
     }
 
+    @Override
+    @Transactional
+    public User getUserEntityById(Long userId) {
+        return userRepository1.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+    }
+
 
 
 

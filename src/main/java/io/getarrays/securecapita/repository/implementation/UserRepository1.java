@@ -52,4 +52,7 @@ public interface UserRepository1 extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     List<User> findByNameOrEmailContainingIgnoreCase(String search);
 
+    @Query("SELECT u FROM User u JOIN u.roles ur JOIN ur.role r WHERE r.name = :roleName")
+    List<User> findByRoleName(String roleName);
+
 }

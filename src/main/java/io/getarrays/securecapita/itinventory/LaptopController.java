@@ -1,6 +1,6 @@
 package io.getarrays.securecapita.itinventory;
 
-import io.getarrays.securecapita.antivirus.AntivirusService;
+
 import io.getarrays.securecapita.dto.UserDTO;
 import io.getarrays.securecapita.exception.CustomMessage;
 import io.getarrays.securecapita.exception.ResourceNotFoundException;
@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 public class LaptopController {
 
 
-    @Autowired
+    //@Autowired
 
 
-  private  AntivirusService antivirusService;
+ // private  AntivirusService antivirusService;
 
     @Autowired
     private LaptopService laptopService;
@@ -39,7 +39,27 @@ public class LaptopController {
                 laptopDto)));
     }
 
-    @PutMapping("/{id}")
+    // Handle update requests specifically
+    @GetMapping("/update")
+    public ResponseEntity<CustomMessage> handleUpdateRequest() {
+        return ResponseEntity.ok(new CustomMessage("Please use PUT /laptop/id/{id} to update a specific laptop"));
+    }
+    
+    // Handle update requests with ID parameter
+    @GetMapping("/update/{id}")
+    public ResponseEntity<CustomMessage> handleUpdateRequestWithId(@PathVariable("id") Long laptopId) {
+        return ResponseEntity.ok(new CustomMessage("Please use PUT /laptop/id/" + laptopId + " to update this laptop"));
+    }
+    
+    // Alternative update endpoint to match frontend pattern
+    @PutMapping("/update/{id}")
+    public ResponseEntity<CustomMessage> updateLaptopAlternative(@AuthenticationPrincipal UserDTO currentUser,
+                                                               @PathVariable("id") Long laptopId,
+                                                               @RequestBody @Valid LaptopDto laptopDto) {
+        return updateLaptop(currentUser, laptopId, laptopDto);
+    }
+
+    @PutMapping("/id/{id}")
     public ResponseEntity<CustomMessage> updateLaptop(@AuthenticationPrincipal UserDTO currentUser,
                                                     @PathVariable("id") Long laptopId,
                                                     @RequestBody @Valid LaptopDto laptopDto) {
@@ -94,7 +114,7 @@ public class LaptopController {
     /**
      * Update laptop status only - accepts multiple formats
      */
-    @PutMapping("/{id}/status")
+    @PutMapping("/id/{id}/status")
     public ResponseEntity<CustomMessage> changeLaptopStatus(@AuthenticationPrincipal UserDTO currentUser,
                                                           @PathVariable("id") Long laptopId,
                                                           @RequestBody Object statusRequest) {
@@ -152,7 +172,7 @@ public class LaptopController {
             return ResponseEntity.ok(new CustomMessage(message, updatedLaptop));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new CustomMessage("Invalid status value. Valid values are: WAITING_FOR_ACKNOWLEDGEMENT, AVAILABLE, ISSUED, PENDING_ACKNOWLEDGMENT, MAINTENANCE, RETIRED"));
+                .body(new CustomMessage("Invalid status value. Valid values are: WAITING_FOR_ACKNOWLEDGEMENT, AVAILABLE, ISSUED, PENDING_ACKNOWLEDGMENT, MAINTENANCE, RETIRED, ACTIVE, INACTIVE"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new CustomMessage("Error updating laptop status: " + e.getMessage()));
@@ -162,7 +182,7 @@ public class LaptopController {
     /**
      * Simple update endpoint that accepts a string action
      */
-    @PutMapping("/{id}/action")
+    @PutMapping("/id/{id}/action")
     public ResponseEntity<CustomMessage> performLaptopAction(@AuthenticationPrincipal UserDTO currentUser,
                                                            @PathVariable("id") Long laptopId,
                                                            @RequestBody String action) {
@@ -198,6 +218,14 @@ public class LaptopController {
                     updatedLaptop = laptopService.changeLaptopStatus(currentUser, laptopId, LaptopStatus.RETIRED);
                     message = "Laptop status changed to RETIRED";
                     break;
+                case "active":
+                    updatedLaptop = laptopService.changeLaptopStatus(currentUser, laptopId, LaptopStatus.ACTIVE);
+                    message = "Laptop status changed to ACTIVE";
+                    break;
+                case "inactive":
+                    updatedLaptop = laptopService.changeLaptopStatus(currentUser, laptopId, LaptopStatus.INACTIVE);
+                    message = "Laptop status changed to INACTIVE";
+                    break;
                 case "waiting":
                 case "PENDING_ACKNOWLEDGMENT":
                     updatedLaptop = laptopService.changeLaptopStatus(currentUser, laptopId, LaptopStatus.PENDING_ACKNOWLEDGMENT);
@@ -205,7 +233,7 @@ public class LaptopController {
                     break;
                 default:
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new CustomMessage("Invalid action: " + action + ". Valid actions are: update, refresh, available, issued, maintenance, retired, waiting"));
+                        .body(new CustomMessage("Invalid action: " + action + ". Valid actions are: update, refresh, available, issued, maintenance, retired, active, inactive, waiting"));
             }
             
             return ResponseEntity.ok(new CustomMessage(message, updatedLaptop));
@@ -226,13 +254,25 @@ public class LaptopController {
         return ResponseEntity.ok(laptopService.getIssuedLaptops(currentUser));
     }
 
-    @GetMapping("/{id}")
+    // Get laptops in acknowledgment state
+    @GetMapping("/acknowledgment-state")
+    public ResponseEntity<List<LaptopDto>> getLaptopsInAcknowledgmentState(@AuthenticationPrincipal UserDTO currentUser) {
+        return ResponseEntity.ok(laptopService.getLaptopsInAcknowledgmentState(currentUser));
+    }
+
+    // Get laptops pending acknowledgment (alternative endpoint)
+    @GetMapping("/pending-acknowledgment")
+    public ResponseEntity<List<LaptopDto>> getLaptopsPendingAcknowledgment(@AuthenticationPrincipal UserDTO currentUser) {
+        return ResponseEntity.ok(laptopService.getLaptopsPendingAcknowledgment(currentUser));
+    }
+
+    @GetMapping("/id/{id}")
     public ResponseEntity<LaptopDto> getLaptopById(@AuthenticationPrincipal UserDTO currentUser,
                                                   @PathVariable("id") Long laptopId) {
         return ResponseEntity.ok(laptopService.getLaptopById(currentUser, laptopId));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/id/{id}")
     public ResponseEntity<CustomMessage> deleteLaptop(@AuthenticationPrincipal UserDTO currentUser,
                                                     @PathVariable("id") Long laptopId) {
         laptopService.deleteLaptop(currentUser, laptopId);
@@ -245,13 +285,13 @@ public class LaptopController {
         return ResponseEntity.ok(laptopService.serialNumberExists(serialNumber));
     }
 
-    @PostMapping("/antivirus/laptop/{id}")
-    public ResponseEntity<Antivirus> addAntivirusToLaptop(
-            @PathVariable("id") Long laptopId,
-            @RequestBody Antivirus antivirus) {
-        Antivirus created = antivirusService.addAntivirusToLaptop(laptopId, antivirus);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+//    @PostMapping("/antivirus/laptop/{id}")
+//    public ResponseEntity<Antivirus> addAntivirusToLaptop(
+//            @PathVariable("id") Long laptopId,
+//            @RequestBody Antivirus antivirus) {
+//        Antivirus created = antivirusService.addAntivirusToLaptop(laptopId, antivirus);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+//    }
 
     @GetMapping("/all-maintenance")
     public ResponseEntity<List<LaptopDto>> getAllLaptopWithMaintenance(@AuthenticationPrincipal UserDTO currentUser) {
@@ -270,14 +310,10 @@ public class LaptopController {
 
 
 
-    @GetMapping("/{id}/with-retired")
+    @GetMapping("/id/{id}/with-retired")
     public ResponseEntity<LaptopDto> getLaptopWithRetiredStatus(@AuthenticationPrincipal UserDTO currentUser, @PathVariable("id") Long laptopId) {
         return ResponseEntity.ok(laptopService.getLaptopWithRetiredStatusById(currentUser, laptopId));
     }
-
-
-
-
 
     @GetMapping("/all-retired")
     public ResponseEntity<List<LaptopDto>> getAllLaptopWithRETIRED(@AuthenticationPrincipal UserDTO currentUser) {
@@ -285,7 +321,7 @@ public class LaptopController {
     }
 
     // Issue laptop with pending acknowledgment
-    @PutMapping("/{id}/issue-with-acknowledgment")
+    @PutMapping("/id/{id}/issue-with-acknowledgment")
     public ResponseEntity<CustomMessage> issueLaptopWithAcknowledgment(@AuthenticationPrincipal UserDTO currentUser,
                                                                       @PathVariable("id") Long laptopId,
                                                                       @RequestBody @Valid LaptopDto laptopDto) {
@@ -296,7 +332,7 @@ public class LaptopController {
     }
 
     // Station admin acknowledges laptop issuance
-    @PostMapping("/{id}/acknowledge-issuance")
+    @PostMapping("/id/{id}/acknowledge-issuance")
     public ResponseEntity<CustomMessage> acknowledgeLaptopIssuance(@AuthenticationPrincipal UserDTO currentUser,
                                                                   @PathVariable("id") Long laptopId,
                                                                   @RequestBody @Valid LaptopAcknowledgmentDto acknowledgmentDto) {
@@ -314,7 +350,7 @@ public class LaptopController {
     }
 
     // Get acknowledgment history for a laptop
-    @GetMapping("/{id}/acknowledgment")
+    @GetMapping("/id/{id}/acknowledgment")
     public ResponseEntity<LaptopAcknowledgmentDto> getLaptopAcknowledgment(@PathVariable("id") Long laptopId) {
         return ResponseEntity.ok(laptopService.getLaptopAcknowledgment(laptopId));
     }
@@ -322,7 +358,7 @@ public class LaptopController {
 
 
     // Step 2: Acknowledge a laptop
-    @PostMapping("/acknowledge")
+    @PostMapping("/issued")
     public LaptopAcknowledgmentDto acknowledgeLaptop(
             @RequestParam Long laptopId,
             @RequestBody UserDTO acknowledger,
@@ -365,7 +401,7 @@ public class LaptopController {
 
 
     // Manually acknowledge a laptop that is in PENDING_ACKNOWLEDGMENT status
-    @PostMapping("/{id}/manual-acknowledge")
+    @PostMapping("/id/{id}/manual-acknowledge")
     public ResponseEntity<CustomMessage> manuallyAcknowledgeLaptop(@AuthenticationPrincipal UserDTO currentUser,
                                                                   @PathVariable("id") Long laptopId,
                                                                   @RequestBody(required = false) String acknowledgmentNotes) {
@@ -402,6 +438,11 @@ public class LaptopController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<LaptopDto>> getLaptopsByStatus(@PathVariable("status") LaptopStatus status) {
         return ResponseEntity.ok(laptopService.getLaptopsByStatus(status));
+    }
+    
+    @GetMapping("/station/{station}")
+    public ResponseEntity<List<LaptopDto>> getLaptopsByStation(@PathVariable("station") String station) {
+        return ResponseEntity.ok(laptopService.getLaptopsByStation(station));
     }
 }
 

@@ -52,6 +52,7 @@ public interface UserService {
 
     UserDTO getUserById(Long userId);
 
+    User getUserEntityById(Long userId);
 
     void updatePassword(Long userId, String currentPassword, String newPassword, String confirmNewPassword);
 

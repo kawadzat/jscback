@@ -1,0 +1,554 @@
+{
+	"info": {
+		"_postman_id": "antivirus-update-api-collection",
+		"name": "Antivirus Update API",
+		"description": "Comprehensive collection for testing antivirus update endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Update Endpoints",
+			"item": [
+				{
+					"name": "Basic Update Antivirus",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Antivirus Name\",\n  \"key\": \"NEW-KEY-12345\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.1.0\",\n  \"vendor\": \"Updated Vendor\",\n  \"status\": \"ACTIVE\",\n  \"isInstalled\": true,\n  \"licenseExpirationDate\": \"2025-12-31T23:59:59\",\n  \"lastScanDate\": \"2024-01-15T10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update with Duplicate Check",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Antivirus Name\",\n  \"key\": \"NEW-KEY-12345\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.1.0\",\n  \"vendor\": \"Updated Vendor\",\n  \"status\": \"ACTIVE\",\n  \"isInstalled\": true,\n  \"licenseExpirationDate\": \"2025-12-31T23:59:59\",\n  \"lastScanDate\": \"2024-01-15T10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}/with-duplicate-check",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}",
+								"with-duplicate-check"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update on Specific Laptop",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Antivirus Name\",\n  \"key\": \"NEW-KEY-12345\",\n  \"renewTimeInterval\": 365,\n  \"version\": \"2024.1.0\",\n  \"vendor\": \"Updated Vendor\",\n  \"status\": \"ACTIVE\",\n  \"isInstalled\": true,\n  \"licenseExpirationDate\": \"2025-12-31T23:59:59\",\n  \"lastScanDate\": \"2024-01-15T10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/laptop/{{laptop_id}}/antivirus/{{antivirus_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"laptop",
+								"{{laptop_id}}",
+								"antivirus",
+								"{{antivirus_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Partial Update",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"New Name\",\n  \"version\": \"2024.2.0\",\n  \"status\": \"INACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Status Only",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}",
+								"status"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Installation Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"isInstalled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}/installation",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}",
+								"installation"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update License Expiration",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"licenseExpirationDate\": \"2025-06-30T23:59:59\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}/license-expiration",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}",
+								"license-expiration"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Last Scan Date",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lastScanDate\": \"2024-01-15T10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}/last-scan",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}",
+								"last-scan"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Delete Endpoints",
+			"item": [
+				{
+					"name": "Delete Antivirus",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/id/{{antivirus_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"id",
+								"{{antivirus_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove from Laptop",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/laptop/{{laptop_id}}/antivirus/{{antivirus_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"laptop",
+								"{{laptop_id}}",
+								"antivirus",
+								"{{antivirus_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Search and Filter",
+			"item": [
+				{
+					"name": "Search by Name",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/search/name/{{search_name}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"search",
+								"name",
+								"{{search_name}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Filter by Vendor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/vendor/{{vendor_name}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"vendor",
+								"{{vendor_name}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Filter by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/status/{{status}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"status",
+								"{{status}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Installed Only",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/installed",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"installed"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Expiring Licenses (30 days)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/expiring",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"expiring"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Expiring Licenses (Custom Days)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/expiring/{{days}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"expiring",
+								"{{days}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/antivirus/statistics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"antivirus",
+								"statistics"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "your-jwt-token-here",
+			"type": "string"
+		},
+		{
+			"key": "antivirus_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "laptop_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "search_name",
+			"value": "antivirus",
+			"type": "string"
+		},
+		{
+			"key": "vendor_name",
+			"value": "Norton",
+			"type": "string"
+		},
+		{
+			"key": "status",
+			"value": "ACTIVE",
+			"type": "string"
+		},
+		{
+			"key": "days",
+			"value": "60",
+			"type": "string"
+		}
+	]
+} 
