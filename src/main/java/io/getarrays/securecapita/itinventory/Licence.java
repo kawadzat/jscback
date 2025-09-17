@@ -122,7 +122,7 @@ public class Licence {
     @PrePersist
     protected void onCreate() {
         if (status == null) {
-            status = LicenseStatus.ACTIVE;
+            status = LicenseStatus.PENDING;
         }
         if (licenseType == null) {
             licenseType = LicenseType.PERPETUAL;

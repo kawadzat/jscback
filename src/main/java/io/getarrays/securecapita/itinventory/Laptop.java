@@ -126,5 +126,12 @@ public class Laptop   extends Auditable<String> {
     @OneToMany(mappedBy = "laptop", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Antivirus> antivirusList = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        if (status == null) {
+            status = LaptopStatus.AVAILABLE;
+        }
+    }
 }
 

@@ -376,7 +376,7 @@ public class LaptopController {
             @RequestBody @Valid LaptopDto laptopDto) {
         return ResponseEntity.ok(new CustomMessage(
                 "Laptop issued and pending acknowledgment",
-                laptopService.issueLaptop(currentUser, laptopDto)
+                laptopService.createLaptop(currentUser, laptopDto)
         ));
     }
 
@@ -443,6 +443,100 @@ public class LaptopController {
     @GetMapping("/station/{station}")
     public ResponseEntity<List<LaptopDto>> getLaptopsByStation(@PathVariable("station") String station) {
         return ResponseEntity.ok(laptopService.getLaptopsByStation(station));
+    }
+
+    // ===== LAPTOP ISSUE REPORTING ENDPOINTS =====
+
+    /**
+     * Report a laptop issue - automatically sets status to PENDING_ACKNOWLEDGMENT
+     * Endpoint: POST /laptop/{laptopId}/report-issue
+     */
+    @PostMapping("/{laptopId}/report-issue")
+    public ResponseEntity<CustomMessage> reportLaptopIssue(@AuthenticationPrincipal UserDTO currentUser,
+                                                          @PathVariable Long laptopId,
+                                                          @RequestBody IssueReportRequest issueRequest) {
+        try {
+            LaptopDto updatedLaptop = laptopService.reportLaptopIssue(
+                currentUser, 
+                laptopId, 
+                issueRequest.getIssueDescription(), 
+                issueRequest.getPriority()
+            );
+            return ResponseEntity.ok(new CustomMessage(
+                "Laptop issue reported successfully. Status changed to PENDING_ACKNOWLEDGMENT", 
+                updatedLaptop
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomMessage("Failed to report laptop issue: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Get laptops with reported issues (PENDING_ACKNOWLEDGMENT status)
+     * Endpoint: GET /laptop/reported-issues
+     */
+    @GetMapping("/reported-issues")
+    public ResponseEntity<List<LaptopDto>> getLaptopsWithReportedIssues() {
+        return ResponseEntity.ok(laptopService.getLaptopsWithReportedIssues());
+    }
+
+    /**
+     * Get all laptops with PENDING_ACKNOWLEDGMENT status
+     * Endpoint: GET /laptop/pending-acknowledgment-all
+     */
+    @GetMapping("/pending-acknowledgment-all")
+    public ResponseEntity<List<LaptopDto>> getAllPendingAcknowledgmentLaptops(@AuthenticationPrincipal UserDTO currentUser) {
+        return ResponseEntity.ok(laptopService.getLaptopsByStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT));
+    }
+
+    /**
+     * Get all laptops with PENDING_ACKNOWLEDGMENT status with acknowledgment details
+     * Endpoint: GET /laptop/pending-acknowledgment-detailed
+     */
+    @GetMapping("/pending-acknowledgment-detailed")
+    public ResponseEntity<List<LaptopDto>> getPendingAcknowledgmentLaptopsDetailed(@AuthenticationPrincipal UserDTO currentUser) {
+        return ResponseEntity.ok(laptopService.getLaptopsPendingAcknowledgment(currentUser));
+    }
+
+    /**
+     * Get count of laptops with PENDING_ACKNOWLEDGMENT status
+     * Endpoint: GET /laptop/pending-acknowledgment-count
+     */
+    @GetMapping("/pending-acknowledgment-count")
+    public ResponseEntity<CustomMessage> getPendingAcknowledgmentLaptopsCount(@AuthenticationPrincipal UserDTO currentUser) {
+        List<LaptopDto> pendingLaptops = laptopService.getLaptopsByStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+        return ResponseEntity.ok(new CustomMessage(
+            "Total laptops pending acknowledgment: " + pendingLaptops.size(),
+            pendingLaptops.size()
+        ));
+    }
+
+    /**
+     * Simple acknowledgment for laptop issues
+     * Endpoint: POST /laptop/{laptopId}/acknowledge-issue
+     */
+
+
+    // Inner class for issue report request
+    public static class IssueReportRequest {
+        private String issueDescription;
+        private String priority;
+
+        public String getIssueDescription() {
+            return issueDescription;
+        }
+
+        public void setIssueDescription(String issueDescription) {
+            this.issueDescription = issueDescription;
+        }
+
+        public String getPriority() {
+            return priority;
+        }
+
+        public void setPriority(String priority) {
+            this.priority = priority;
+        }
     }
 }
 

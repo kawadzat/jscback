@@ -4,6 +4,7 @@ import io.getarrays.securecapita.domain.User;
 import io.getarrays.securecapita.dto.UserDTO;
 import io.getarrays.securecapita.exception.ResourceNotFoundException;
 import io.getarrays.securecapita.exception.NotAuthorizedException;
+import io.getarrays.securecapita.exception.BadRequestException;
 import io.getarrays.securecapita.repository.UserRepository;
 import io.getarrays.securecapita.repository.implementation.UserRepository1;
 import io.getarrays.securecapita.task.Task;
@@ -11,6 +12,7 @@ import io.getarrays.securecapita.task.TaskDto;
 import io.getarrays.securecapita.maintenance.Maintenance;
 import io.getarrays.securecapita.maintenance.MaintenanceDto;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import io.getarrays.securecapita.service.EmailService;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 @Transactional
 public class LaptopService {
     private final UserRepository<User> userRepository;
@@ -40,8 +43,34 @@ public class LaptopService {
         validateDates(laptopDto);
         validateLaptopSpecificFields(laptopDto);
         Laptop laptopEntity = dtoToEntity(currentUser, null, laptopDto); // Map DTO to entity
-        Laptop savedLaptop = laptopRepository.save(laptopEntity);        // Save entity
-        return entityToDto(savedLaptop);                                 // Map back to DTO
+        
+        // WHEN STATUS IS ISSUE, IT MUST GO TO PENDING_ACKNOWLEDGMENT
+        if (laptopEntity.getStatus() == LaptopStatus.ISSUE) {
+            // ISSUE status automatically becomes PENDING_ACKNOWLEDGMENT
+            laptopEntity.setStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+            Laptop savedLaptop = laptopRepository.save(laptopEntity);
+            
+            // Create automatic acknowledgment for the issue
+            createAutomaticAcknowledgment(currentUser, savedLaptop);
+            
+            return entityToDto(savedLaptop);
+        } 
+        // Handle ISSUED status separately if needed
+        else if (laptopEntity.getStatus() == LaptopStatus.ISSUED) {
+            // For ISSUED status, also go to PENDING_ACKNOWLEDGMENT first
+            laptopEntity.setStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+            Laptop savedLaptop = laptopRepository.save(laptopEntity);
+            
+            // Create automatic acknowledgment
+            createAutomaticAcknowledgment(currentUser, savedLaptop);
+            
+            return entityToDto(savedLaptop);
+        } 
+        else {
+            // For other statuses, save normally
+            Laptop savedLaptop = laptopRepository.save(laptopEntity);
+            return entityToDto(savedLaptop);
+        }
     }
 
     private void validateDates(LaptopDto dto) {
@@ -720,6 +749,110 @@ public class LaptopService {
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    // Report a laptop issue - automatically sets status to PENDING_ACKNOWLEDGMENT
+    public LaptopDto reportLaptopIssue(UserDTO currentUser, Long laptopId, String issueDescription, String priority) {
+        Laptop laptop = laptopRepository.findById(laptopId)
+                .orElseThrow(() -> new ResourceNotFoundException("Laptop not found with id: " + laptopId));
+        
+        // Set status to PENDING_ACKNOWLEDGMENT when issue is reported
+        laptop.setStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+        
+        // Create automatic acknowledgment entry for the issue
+        createAutomaticIssueAcknowledgment(currentUser, laptop, issueDescription, priority);
+        
+        Laptop savedLaptop = laptopRepository.save(laptop);
+        return entityToDto(savedLaptop);
+    }
+
+    // Create automatic acknowledgment for laptop issues
+    private void createAutomaticIssueAcknowledgment(UserDTO currentUser, Laptop laptop, String issueDescription, String priority) {
+        try {
+            User user = userRepository1.findById(currentUser.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            LaptopAcknowledgment acknowledgment = LaptopAcknowledgment.builder()
+                    .laptop(laptop)
+                    .acknowledgedBy(user)
+                    .notes("Issue reported: " + issueDescription + " (Priority: " + priority + ")")
+                    .signatureType("AUTOMATIC_ISSUE_REPORT")
+                    .signatureTimestamp(LocalDateTime.now())
+                    .ipAddress("SYSTEM")
+                    .userAgent("SYSTEM_ISSUE_REPORT")
+                    .certificateInfo("Automatic issue report acknowledgment")
+                    .build();
+
+            laptopAcknowledgmentRepository.save(acknowledgment);
+        } catch (Exception e) {
+            log.error("Failed to create automatic issue acknowledgment for laptop {}: {}", laptop.getId(), e.getMessage());
+            // Don't throw exception as this shouldn't block the main operation
+        }
+    }
+
+    // Get laptops with reported issues (PENDING_ACKNOWLEDGMENT status)
+    public List<LaptopDto> getLaptopsWithReportedIssues() {
+        List<Laptop> laptopsWithIssues = laptopRepository.findByStatus(LaptopStatus.PENDING_ACKNOWLEDGMENT);
+        return laptopsWithIssues.stream()
+                .map(laptop -> {
+                    LaptopDto dto = entityToDto(laptop);
+                    // Get acknowledgment notes if available (contains issue description)
+                    LaptopAcknowledgment acknowledgment = laptopAcknowledgmentRepository.findByLaptopId(laptop.getId()).orElse(null);
+                    if (acknowledgment != null && acknowledgment.getNotes() != null && 
+                        acknowledgment.getNotes().startsWith("Issue reported:")) {
+                        dto.setNotes(acknowledgment.getNotes());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // Acknowledge a reported laptop issue
+    public LaptopAcknowledgmentDto acknowledgeReportedIssue(UserDTO currentUser, Long laptopId, LaptopAcknowledgmentDto acknowledgmentDto) {
+        Laptop laptop = laptopRepository.findById(laptopId)
+                .orElseThrow(() -> new ResourceNotFoundException("Laptop not found with id: " + laptopId));
+        
+        // Check if laptop is in pending acknowledgment status (reported issue)
+        if (laptop.getStatus() != LaptopStatus.PENDING_ACKNOWLEDGMENT) {
+            throw new BadRequestException("Laptop is not in pending acknowledgment status");
+        }
+        
+        User user = userRepository1.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        // Generate signature hash if signature is provided
+        String signatureHash = null;
+        if (acknowledgmentDto.getSignature() != null && !acknowledgmentDto.getSignature().trim().isEmpty()) {
+            signatureHash = signatureService.generateSignatureHash(
+                acknowledgmentDto.getSignature(), 
+                laptopId, 
+                currentUser.getId()
+            );
+        }
+        
+        // Create acknowledgment for the issue
+        LaptopAcknowledgment acknowledgment = LaptopAcknowledgment.builder()
+                .laptop(laptop)
+                .acknowledgedBy(user)
+                .notes(acknowledgmentDto.getNotes())
+                .signature(acknowledgmentDto.getSignature())
+                .signatureType(acknowledgmentDto.getSignatureType())
+                .signatureTimestamp(acknowledgmentDto.getSignatureTimestamp() != null ? acknowledgmentDto.getSignatureTimestamp() : LocalDateTime.now())
+                .ipAddress(acknowledgmentDto.getIpAddress())
+                .userAgent(acknowledgmentDto.getUserAgent())
+                .certificateInfo(acknowledgmentDto.getCertificateInfo())
+                .signatureHash(signatureHash)
+                .build();
+        
+        LaptopAcknowledgment savedAcknowledgment = laptopAcknowledgmentRepository.save(acknowledgment);
+        
+        // Update laptop status based on the issue resolution
+        // If the issue is resolved, set to AVAILABLE or ISSUED based on context
+        // For now, we'll set it to AVAILABLE after acknowledgment
+        laptop.setStatus(LaptopStatus.AVAILABLE);
+        laptopRepository.save(laptop);
+        
+        return acknowledgmentToDto(savedAcknowledgment);
     }
 
 
