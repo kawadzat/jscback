@@ -144,7 +144,7 @@ public class Recordings extends Auditable<String> {
     @PrePersist
     protected void onCreate() {
         if (status == null) {
-            status = RecordingStatus.NOT_BACKED;
+            status = RecordingStatus.RECORDING;
         }
         if (isArchived == null) {
             isArchived = false;

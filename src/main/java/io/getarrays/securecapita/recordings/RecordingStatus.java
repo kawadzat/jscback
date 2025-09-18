@@ -2,7 +2,6 @@ package io.getarrays.securecapita.recordings;
 
 /**
  * Enum representing the status of a court recording.
- * Based on the Testimony App interface showing "not backed" status.
  * 
  * @author Generated
  * @version 1.0
@@ -10,24 +9,19 @@ package io.getarrays.securecapita.recordings;
  */
 public enum RecordingStatus {
     /**
-     * Recording has been created but not yet backed up
-     */
-    NOT_BACKED,
-    
-    /**
      * Recording has been successfully backed up
      */
     BACKED,
     
     /**
-     * Recording is currently being processed
+     * Recording is currently in progress
      */
-    PROCESSING,
+    RECORDING,
     
     /**
-     * Recording has failed during processing
+     * Recording has been completed successfully
      */
-    FAILED,
+    COMPLETED,
     
     /**
      * Recording has been archived

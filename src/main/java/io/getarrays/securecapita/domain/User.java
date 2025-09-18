@@ -67,6 +67,17 @@ public class User {
     
     @Column(name = "password_last_changed")
     private LocalDateTime passwordLastChanged;
+    
+    // Account lockout fields
+    @Column(name = "failed_login_attempts")
+    @Builder.Default
+    private int failedLoginAttempts = 0;
+    
+    @Column(name = "account_locked_until")
+    private LocalDateTime accountLockedUntil;
+    
+    @Column(name = "last_failed_login")
+    private LocalDateTime lastFailedLogin;
 
     @JsonIgnore
     private Timestamp verificationTokenExpiry;
@@ -149,6 +160,78 @@ public class User {
             return true; // Already expired
         }
         return getDaysUntilPasswordExpires() <= days;
+    }
+
+    /**
+     * Check if account is currently locked
+     */
+    public boolean isAccountLocked() {
+        if (accountLockedUntil == null) {
+            return false;
+        }
+        return LocalDateTime.now().isBefore(accountLockedUntil);
+    }
+
+    /**
+     * Lock account for specified minutes
+     */
+    public void lockAccount(int minutes) {
+        this.isNotLocked = false;
+        this.accountLockedUntil = LocalDateTime.now().plusMinutes(minutes);
+        this.failedLoginAttempts = 3; // Set to max attempts
+    }
+
+    /**
+     * Unlock account
+     */
+    public void unlockAccount() {
+        this.isNotLocked = true;
+        this.accountLockedUntil = null;
+        this.failedLoginAttempts = 0;
+    }
+
+    /**
+     * Increment failed login attempts
+     */
+    public void incrementFailedLoginAttempts() {
+        this.failedLoginAttempts++;
+        this.lastFailedLogin = LocalDateTime.now();
+        
+        // Lock account after 3 failed attempts
+        if (this.failedLoginAttempts >= 3) {
+            lockAccount(30); // Lock for 30 minutes
+        }
+    }
+
+    /**
+     * Reset failed login attempts on successful login
+     */
+    public void resetFailedLoginAttempts() {
+        this.failedLoginAttempts = 0;
+        this.lastFailedLogin = null;
+    }
+
+    /**
+     * Check if account should be automatically unlocked
+     */
+    public boolean shouldAutoUnlock() {
+        if (accountLockedUntil == null) {
+            return false;
+        }
+        return LocalDateTime.now().isAfter(accountLockedUntil);
+    }
+
+    /**
+     * Get remaining lockout time in minutes
+     */
+    public long getRemainingLockoutMinutes() {
+        if (accountLockedUntil == null) {
+            return 0;
+        }
+        if (LocalDateTime.now().isAfter(accountLockedUntil)) {
+            return 0;
+        }
+        return java.time.Duration.between(LocalDateTime.now(), accountLockedUntil).toMinutes();
     }
 
     //laptops

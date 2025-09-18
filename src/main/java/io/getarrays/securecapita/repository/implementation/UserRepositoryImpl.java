@@ -485,6 +485,42 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
     private String getVerificationUrl(String key, String type) {
         return fromCurrentContextPath().path("/user/verify/" + type + "/" + key).toUriString();
     }
+
+    @Override
+    public List<User> findLockedUsers() {
+        try {
+            String query = "SELECT * FROM users WHERE non_locked = false AND account_locked_until IS NOT NULL";
+            return jdbc.query(query, new UserRowMapper());
+        } catch (Exception e) {
+            log.error("Error finding locked users", e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public void save(User user) {
+        try {
+            String query = "UPDATE users SET failed_login_attempts = :failedLoginAttempts, " +
+                          "account_locked_until = :accountLockedUntil, " +
+                          "last_failed_login = :lastFailedLogin, " +
+                          "non_locked = :isNotLocked " +
+                          "WHERE id = :id";
+            
+            Map<String, Object> params = Map.of(
+                "failedLoginAttempts", user.getFailedLoginAttempts(),
+                "accountLockedUntil", user.getAccountLockedUntil(),
+                "lastFailedLogin", user.getLastFailedLogin(),
+                "isNotLocked", user.isNotLocked(),
+                "id", user.getId()
+            );
+            
+            jdbc.update(query, params);
+            log.info("Updated user lockout information for user ID: {}", user.getId());
+        } catch (Exception e) {
+            log.error("Error saving user lockout information", e);
+            throw new ApiException("Error updating user account lockout information");
+        }
+    }
 }
 
 

@@ -33,7 +33,7 @@ public class RecordingsServiceImpl implements RecordingsService {
         
         // Set default status if not provided
         if (recording.getStatus() == null) {
-            recording.setStatus(RecordingStatus.NOT_BACKED);
+            recording.setStatus(RecordingStatus.RECORDING);
         }
         
         // Set default archived status if not provided
@@ -258,20 +258,20 @@ public class RecordingsServiceImpl implements RecordingsService {
 
     @Override
     public Recordings markAsProcessing(Long id) {
-        log.info("Marking recording {} as processing", id);
+        log.info("Marking recording {} as recording", id);
         
         Recordings recording = getById(id);
-        recording.setStatus(RecordingStatus.PROCESSING);
+        recording.setStatus(RecordingStatus.RECORDING);
         
         return recordingsRepository.save(recording);
     }
 
     @Override
     public Recordings markAsFailed(Long id) {
-        log.info("Marking recording {} as failed", id);
+        log.info("Marking recording {} as deleted", id);
         
         Recordings recording = getById(id);
-        recording.setStatus(RecordingStatus.FAILED);
+        recording.setStatus(RecordingStatus.DELETED);
         
         return recordingsRepository.save(recording);
     }
@@ -353,7 +353,7 @@ public class RecordingsServiceImpl implements RecordingsService {
     @Override
     @Transactional(readOnly = true)
     public List<Recordings> getRecordingsNeedingBackup() {
-        return recordingsRepository.findByStatusAndBackupDateIsNull(RecordingStatus.NOT_BACKED);
+        return recordingsRepository.findByStatusAndBackupDateIsNull(RecordingStatus.RECORDING);
     }
 
     // Reporting methods

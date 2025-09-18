@@ -46,7 +46,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {"/api/v1/jasper/pdf/asset","/user/verify/password/**","/user/reset/password",
             "/user/login/**", "/user/verify/code/**", "/user/register/**", "/user/resetpassword/**", "/user/verify/account/**",
-            "/user/refresh/token/**","/api/v1/user/station/get", "/api/v1/user/station/getCount", "/StockItemRequest", "/user/image/**", "user/list/**", "io/getarrays/securecapita/assert/**", "newvehicle/**", "inspection/**", "inventory/**", "/purchaseRequisition/**", "/store/**", "/inspection/addtoassert/**", "product/**", "category/**", "stock/totalQuantity/**", "users/{userId}/**", "/licence/**"};
+            "/user/refresh/token/**","/api/v1/user/station/get", "/api/v1/user/station/getCount", "/StockItemRequest", "/user/image/**", "user/list/**", "io/getarrays/securecapita/assert/**", "newvehicle/**", "inspection/**", "inventory/**", "/purchaseRequisition/**", "/store/**", "/inspection/addtoassert/**", "product/**", "category/**", "stock/totalQuantity/**", "users/{userId}/**", "/licence/**", "/api/v1/recording/**"};
 
 
     @Bean

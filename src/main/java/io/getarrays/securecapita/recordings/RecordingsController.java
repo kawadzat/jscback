@@ -547,7 +547,7 @@ public class RecordingsController {
                     .caseDetails("Test Voice Recording")
                     .judge("Test Judge")
                     .durationMinutes(5.0)
-                    .status(RecordingStatus.NOT_BACKED)
+                    .status(RecordingStatus.RECORDING)
                     .fileSizeMb(2.5)
                     .filePath("recordings/test/voice_test.wav")
                     .fileName("voice_test.wav")

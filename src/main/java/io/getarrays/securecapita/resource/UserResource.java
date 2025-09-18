@@ -13,6 +13,7 @@ import io.getarrays.securecapita.form.SettingsForm;
 import io.getarrays.securecapita.form.UpdateForm;
 import io.getarrays.securecapita.form.UpdatePasswordForm;
 import io.getarrays.securecapita.provider.TokenProvider;
+import io.getarrays.securecapita.service.AccountLockService;
 import io.getarrays.securecapita.service.EventService;
 import io.getarrays.securecapita.service.RoleService;
 import io.getarrays.securecapita.service.UserService;
@@ -71,6 +72,7 @@ public class UserResource {
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final ApplicationEventPublisher publisher;
+    private final AccountLockService accountLockService;
 
 
     @PostMapping("/login")
@@ -353,6 +355,40 @@ public class UserResource {
     }
 
 
+    // Account lockout management endpoints
+    @GetMapping("/account-status/{email}")
+    public ResponseEntity<AccountLockService.AccountLockoutStatus> getAccountStatus(@PathVariable String email) {
+        AccountLockService.AccountLockoutStatus status = accountLockService.getAccountStatus(email);
+        return ResponseEntity.ok(status);
+    }
+
+    @PostMapping("/unlock-account/{email}")
+    public ResponseEntity<HttpResponse> unlockAccount(@PathVariable String email) {
+        boolean unlocked = accountLockService.unlockAccount(email);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(of("email", email, "unlocked", unlocked))
+                        .message(unlocked ? "Account unlocked successfully" : "Failed to unlock account")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+    @PostMapping("/lock-account/{email}")
+    public ResponseEntity<HttpResponse> lockAccount(@PathVariable String email, 
+                                                   @RequestParam(defaultValue = "30") int minutes) {
+        boolean locked = accountLockService.lockAccount(email, minutes);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(of("email", email, "locked", locked, "minutes", minutes))
+                        .message(locked ? "Account locked successfully" : "Failed to lock account")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
     @GetMapping("/verify/account/{key}")
     public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
 
@@ -465,22 +501,41 @@ public class UserResource {
         User testUser = userService1.loadUserByUsername(email);
         if (testUser != null) {
             publisher.publishEvent(new NewUserEvent(LOGIN_ATTEMPT, testUser.getId()));
+            
+            // Check if account is locked
+            if (accountLockService.isAccountLocked(email)) {
+                long remainingMinutes = accountLockService.getAccountStatus(email).getRemainingMinutes();
+                publisher.publishEvent(new NewUserEvent(LOGIN_ATTEMPT_FAILURE, testUser.getId()));
+                return ResponseEntity.status(423).body(new CustomMessage(
+                    "Account is locked due to multiple failed login attempts. Please try again in " + 
+                    remainingMinutes + " minutes."));
+            }
+            
             if (passwordEncoder.matches(password, testUser.getPassword())) {
-
-//            Authentication authentication = authenticationManager.authenticate(unauthenticated(email, password));
-//            UserDTO loggedInUser = getLoggedInUser(authentication);
-//            if (!testUser.isUsingMfa()) {
-//                publisher.publishEvent(new NewUserEvent(LOGIN_ATTEMPT_SUCCESS, testUser.getId()));
-//            }
+                // Successful login - reset failed attempts
+                accountLockService.handleSuccessfulLogin(email);
+                publisher.publishEvent(new NewUserEvent(LOGIN_ATTEMPT_SUCCESS, testUser.getId()));
+                
                 UserDTO user = UserDTO.toDto(testUser);
                 return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);
+            } else {
+                // Failed login - increment attempts
+                boolean isNowLocked = accountLockService.handleFailedLogin(email);
+                publisher.publishEvent(new NewUserEvent(LOGIN_ATTEMPT_FAILURE, testUser.getId()));
+                
+                if (isNowLocked) {
+                    return ResponseEntity.status(423).body(new CustomMessage(
+                        "Account has been locked due to 3 failed login attempts. Please try again in 30 minutes."));
+                } else {
+                    int remainingAttempts = accountLockService.getRemainingAttempts(email);
+                    return ResponseEntity.status(401).body(new CustomMessage(
+                        "Invalid credentials. " + remainingAttempts + " attempts remaining before account lockout."));
+                }
             }
         }
 
-        publisher.publishEvent(new NewUserEvent(LOGIN_ATTEMPT_FAILURE, testUser.getId()));
+        // User not found - don't reveal this information
         return ResponseEntity.status(401).body(new CustomMessage("Please check your username or password."));
-        //        processError(request, response, new Exception("Unable to Login"));
-//        throw new ApiException(new Exception("Unable to Login. please check your credentials again.").getMessage());
     }
 
 

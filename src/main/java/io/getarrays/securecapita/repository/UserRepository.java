@@ -58,7 +58,9 @@ public interface UserRepository<T extends User> {
     void updateAccountSettings(Long userId, Boolean enabled, Boolean notLocked);
     User toggleMfa(String email);
     void updateImage(UserDTO user, MultipartFile image);
-
-
+    
+    // Account lockout methods
+    List<User> findLockedUsers();
+    void save(User user);
 
 }
