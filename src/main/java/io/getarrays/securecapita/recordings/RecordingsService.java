@@ -2,7 +2,11 @@ package io.getarrays.securecapita.recordings;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +116,10 @@ public interface RecordingsService {
     List<Recordings> bulkArchive(List<Long> ids);
     List<Recordings> bulkUnarchive(List<Long> ids);
     void bulkDelete(List<Long> ids);
+
+    Recordings createRecording(String caseDetails, String judge, Double durationMinutes, String caseType, String courtRoom, String notes, MultipartFile audioFile) throws IOException;
+
+    ResponseEntity<?> streamAudio(Long id) throws IOException;
 }
 
 

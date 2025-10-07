@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
@@ -35,6 +36,29 @@ import java.util.Map;
 public class RecordingsController {
 
     private final RecordingsService recordingsService;
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<Recordings> createRecording(
+            @RequestParam(required = false) String caseDetails,
+            @RequestParam(required = false) String judge,
+            @RequestParam(required = false) Double durationMinutes,
+            @RequestParam(required = false) String caseType,
+            @RequestParam(required = false) String courtRoom,
+            @RequestParam(required = false) String notes,
+            @RequestParam MultipartFile audioFile
+    ) throws Exception {
+
+        Recordings saved = recordingsService.createRecording(
+                caseDetails, judge, durationMinutes, caseType, courtRoom, notes, audioFile
+        );
+
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/{id}/audio")
+    public ResponseEntity<?> streamAudio(@PathVariable Long id) throws IOException {
+        return recordingsService.streamAudio(id);
+    }
 
     // Basic CRUD operations
     @PostMapping

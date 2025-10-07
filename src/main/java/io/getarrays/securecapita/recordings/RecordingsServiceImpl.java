@@ -5,9 +5,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
@@ -606,5 +620,91 @@ public class RecordingsServiceImpl implements RecordingsService {
         log.info("Bulk deleting {} recordings", ids.size());
         
         recordingsRepository.deleteAllById(ids);
+    }
+
+    private final Path uploadDir = Paths.get("uploads/audio");
+
+    public Recordings createRecording(
+            String caseDetails,
+            String judge,
+            Double durationMinutes,
+            String caseType,
+            String courtRoom,
+            String notes,
+            MultipartFile audioFile
+    ) throws IOException {
+
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        // Generate unique filename
+        String originalName = audioFile.getOriginalFilename();
+        String extension = "";
+
+        int dotIndex = originalName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            extension = originalName.substring(dotIndex); // includes the dot
+            originalName = originalName.substring(0, dotIndex); // remove extension from base name
+        }
+
+        String fileName = originalName + "_" + System.currentTimeMillis() + extension;
+        Path filePath = uploadDir.resolve(fileName);
+        Files.copy(audioFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Calculate file size in MB
+        double fileSizeMb = audioFile.getSize() / (1024.0 * 1024.0);
+
+        Recordings recording = Recordings.builder()
+                .recordingDateTime(new Date())
+                .caseDetails(caseDetails)
+                .judge(judge)
+                .durationMinutes(durationMinutes)
+                .caseType(caseType)
+                .courtRoom(courtRoom)
+                .notes(notes)
+                .status(RecordingStatus.COMPLETED)
+                .fileSizeMb(fileSizeMb)
+                .filePath(filePath.toString())
+                .fileName(fileName)
+                .build();
+
+        return recordingsRepository.save(recording);
+    }
+
+    public ResponseEntity<Resource> streamAudio(Long id) throws IOException {
+        Recordings recording = recordingsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Recording not found"));
+
+        Path path = Paths.get(recording.getFilePath());
+        if (!Files.exists(path)) {
+            throw new FileNotFoundException("File not found on server");
+        }
+
+        // Load as resource
+        Resource resource = new UrlResource(path.toUri());
+
+        // Detect MIME type (optional)
+        String contentType = Files.probeContentType(path);
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        // 🔥 Use original file name from DB for download header
+        String originalFileName = recording.getFileName(); // this already contains your original file name
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + originalFileName + "\"")
+                .body(resource);
+    }
+
+    private String detectContentType(String filename) {
+        if (filename == null) return "application/octet-stream";
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".mp3")) return "audio/mpeg";
+        if (lower.endsWith(".wav")) return "audio/wav";
+        if (lower.endsWith(".ogg")) return "audio/ogg";
+        return "application/octet-stream";
     }
 }
